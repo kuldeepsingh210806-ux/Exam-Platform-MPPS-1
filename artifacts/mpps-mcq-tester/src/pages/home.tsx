@@ -10,9 +10,11 @@ export default function Home() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="bg-white p-3 rounded-xl shadow-md border-2 border-accent/20">
-                <GraduationCap className="w-10 h-10 text-primary" />
-              </div>
+              <img
+                src="/mpps-logo.jpg"
+                alt="MPPS Logo"
+                className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-accent/40 bg-white"
+              />
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight">MP Public School</h1>
                 <p className="text-primary-foreground/80 font-medium tracking-wide">Mathuranagar</p>
