@@ -1,0 +1,565 @@
+MPPS MCQ TESTER - FINAL PRODUCTION MASTER SPECIFICATION
+
+Project Overview
+
+Build a complete production-ready school examination platform called:
+
+MPPS MCQ Tester
+
+School:
+MP Public School, Mathuranagar
+
+Technology Requirements:
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Firebase Authentication
+- Firebase Firestore
+- Firebase Storage
+
+The platform must be fully responsive, production-ready, and use Firebase as the permanent backend.
+
+---
+
+CORE RULE
+
+This platform supports ONLY MCQ examinations.
+
+Do NOT implement:
+
+- Subjective Questions
+- Essay Questions
+- Descriptive Questions
+- Student File Uploads
+- Assignment Submission System
+
+Only Multiple Choice Question (MCQ) tests are allowed.
+
+---
+
+FIREBASE REQUIREMENT (CRITICAL)
+
+Remove all production dependency on localStorage.
+
+Use:
+
+- Firebase Authentication
+- Firebase Firestore
+- Firebase Storage
+
+Store permanently:
+
+- Students
+- Teachers
+- Tests
+- Questions
+- Student Attempts
+- Results
+- Notices
+- Rankings
+- Analytics
+- Violation Records
+
+Data must:
+
+- Persist after refresh
+- Persist after logout/login
+- Persist across devices
+- Persist after deployment
+
+Teacher-created tests must be visible to students.
+
+Principal notices must be visible to students.
+
+Student results must remain permanently stored.
+
+Do not use localStorage for critical data.
+
+Use Firestore real-time listeners wherever appropriate.
+
+---
+
+PORTALS
+
+Create three portals:
+
+1. Student Portal
+2. Teacher Portal
+3. Principal Portal
+
+---
+
+STUDENT REGISTRATION & LOGIN
+
+Create a complete student authentication system.
+
+Registration Fields:
+
+- Full Name
+- Class
+- Section
+- Roll Number
+- Mobile Number
+- Password
+- Confirm Password
+
+Login Fields:
+
+- Mobile Number
+- Password
+
+After registration:
+
+- Save student profile in Firestore.
+- Automatically create student dashboard access.
+
+Student records must instantly appear inside:
+
+Teacher Dashboard → Student Management
+
+Principal Dashboard → Student Records
+
+---
+
+STUDENT PORTAL
+
+Dashboard Sections:
+
+1. Live Tests
+2. Upcoming Tests
+3. Previous Tests
+4. Results
+5. Notices
+
+Students can:
+
+- Attempt Live Tests
+- View Upcoming Tests
+- View Previous Tests
+- View Results
+- Review Submitted Answers
+- View Notices
+
+Students must only see tests assigned to their class.
+
+Example:
+
+Class 10 student
+→ Only Class 10 tests.
+
+---
+
+CLASS OPTIONS
+
+Allow ONLY:
+
+- 3rd
+- 4th
+- 5th
+- 6th
+- 7th
+- 8th
+- 9th
+- 10th
+- 11th Bio
+- 11th Commerce
+- 11th Maths
+- 12th Bio
+- 12th Commerce
+- 12th Maths
+
+Use dropdown selection.
+
+No custom classes.
+
+---
+
+SUBJECT OPTIONS
+
+Allow ONLY:
+
+- Mathematics
+- Physics
+- Chemistry
+- Biology
+- SST
+
+Use dropdown selection.
+
+No custom subjects.
+
+---
+
+TEACHER ACCESS CONTROL
+
+Teacher Portal must be protected.
+
+Teacher Passkey:
+
+MPPS01
+
+When user clicks Teacher Portal:
+
+Step 1:
+Enter Teacher Passkey
+
+Step 2:
+Only after successful passkey verification allow:
+
+- Teacher Registration
+- Teacher Login
+
+Teacher Registration Fields:
+
+- Name
+- Mobile Number
+- Subject
+- Password
+
+Teacher Login Fields:
+
+- Mobile Number
+- Password
+
+Store all teacher records in Firebase.
+
+---
+
+TEACHER DASHBOARD
+
+Features:
+
+- Bulk Test Creation
+- Edit Test
+- Delete Test
+- Publish Test
+- Student Management
+- Results
+- Analytics
+- PDF Reports
+
+---
+
+BULK TEST CREATION
+
+Remove separate sections:
+
+❌ Upload MCQ Questions
+
+❌ Create Test
+
+Replace with:
+
+✅ Bulk Test Creation
+
+Teacher Workflow:
+
+Step 1:
+
+Create Test Details:
+
+- Test Name
+- Subject
+- Class
+- Duration
+- Total Marks
+- Start Date
+- End Date
+
+Step 2:
+
+Paste Questions in a single textbox.
+
+---
+
+ENHANCED MCQ FORMAT
+
+Accept format:
+
+Q1. What is 2 + 2?
+
+A) 1
+
+B) 2
+
+C) 4
+
+D) 5
+
+ANSWER: C
+
+Q2. Capital of India?
+
+A) Mumbai
+
+B) Delhi
+
+C) Kolkata
+
+D) Chennai
+
+ANSWER: B
+
+Parser Requirements:
+
+- Ignore extra spaces
+- Ignore blank lines
+- Validate options
+- Validate answers
+- Detect malformed questions
+- Show exact line errors
+- Show question preview
+- Support 100+ questions
+- Prevent invalid test creation
+
+Display formatting instructions above the textbox.
+
+---
+
+STUDENT MANAGEMENT
+
+Teacher Dashboard:
+
+- View Students
+- Search Students
+- Filter By Class
+- View Profile
+- View Test History
+- View Performance
+
+---
+
+TEST SECURITY
+
+Implement anti-cheating system.
+
+Detect:
+
+- Tab Switching
+- Browser Minimization
+- Visibility Changes
+
+Behavior:
+
+First violation:
+Warning
+
+Second violation:
+Final Warning
+
+Third violation:
+Auto-submit test
+
+Store violations in Firestore.
+
+Teachers can view violation counts.
+
+---
+
+PAGE REFRESH PROTECTION
+
+Current issue:
+
+Refreshing sometimes removes the test.
+
+Fix completely.
+
+Requirements:
+
+- Autosave answers
+- Autosave current question
+- Autosave timer
+- Autosave progress
+
+After refresh:
+
+- Same question opens
+- Timer continues correctly
+- Answers remain selected
+- Test continues normally
+
+No progress loss.
+
+Use Firestore autosave.
+
+---
+
+ONE ATTEMPT RULE
+
+Students can attempt a test only once.
+
+After submission:
+
+- Lock test
+- Prevent reattempt
+- Allow answer review
+- Allow result viewing
+
+---
+
+RESULTS
+
+Display:
+
+- Score
+- Percentage
+- Correct Answers
+- Incorrect Answers
+- Rank
+
+---
+
+PDF REPORTS
+
+Teacher PDFs:
+
+- Individual Student Result PDF
+- Class Result PDF
+- Test Report PDF
+
+Principal PDFs:
+
+- School Performance PDF
+- Class Performance PDF
+
+Store generated PDFs in Firebase Storage.
+
+---
+
+PRINCIPAL ACCESS CONTROL
+
+Principal Portal must be protected.
+
+Principal Passkey:
+
+MPPS05
+
+When user clicks Principal Portal:
+
+Require passkey verification.
+
+Only after successful verification allow access.
+
+---
+
+PRINCIPAL DASHBOARD
+
+Features:
+
+- School Analytics
+- Class-wise Analytics
+- Top Performers
+- Notices
+- Reports
+- Student Records
+
+Student Records:
+
+- View All Students
+- Search Students
+- Filter By Class
+- Performance Tracking
+- School Statistics
+
+---
+
+NOTICE SYSTEM
+
+Principal can:
+
+- Create Notice
+- Edit Notice
+- Delete Notice
+
+Students can:
+
+- View Notices
+
+Teachers can:
+
+- View Notices
+
+Notices should update instantly using Firestore real-time listeners.
+
+---
+
+FIREBASE COLLECTIONS
+
+Create and use:
+
+- students
+- teachers
+- tests
+- questions
+- studentAttempts
+- results
+- notices
+- analytics
+- violations
+- rankings
+
+---
+
+UI REQUIREMENTS
+
+- Fully Mobile Responsive
+- Fast Loading
+- Professional School Theme
+- Modern Dashboard Layout
+- Beautiful Cards
+- Charts and Analytics
+- Professional Tables
+- Smooth Animations
+- Clean Typography
+
+Remove:
+
+- Placeholder Pages
+- Demo Data
+- Mock Features
+- "Coming Soon" Buttons
+
+Every button must perform a real action.
+
+---
+
+SECURITY
+
+Students:
+
+- Access only Student Portal
+
+Teachers:
+
+- Passkey MPPS01 required
+
+Principal:
+
+- Passkey MPPS05 required
+
+Protected routes must redirect unauthorized users.
+
+---
+
+FINAL VERIFICATION
+
+Before completion perform a full audit.
+
+Provide a checklist confirming:
+
+- No broken buttons
+- No placeholder pages
+- No "Coming Soon" features
+- Firebase connected
+- Student registrations stored permanently
+- Teacher registrations stored permanently
+- Tests stored permanently
+- Notices stored permanently
+- Results stored permanently
+- Anti-cheating working
+- Refresh recovery working
+- Student Portal complete
+- Teacher Portal complete
+- Principal Portal complete
+- Production ready
