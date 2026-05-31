@@ -1,101 +1,89 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { addTest, generateId, MCQQuestion, Test } from "@/lib/store";
+import { useAuth } from "@/lib/auth-context";
+import { saveTest, generateId, MCQQuestion, Test } from "@/lib/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, PlusCircle, CheckCircle2 } from "lucide-react";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { CheckCircle2, Loader2, Trash2 } from "lucide-react";
 
-const CLASSES = ["Class 6","Class 7","Class 8","Class 9","Class 10","Class 11","Class 12"];
-const STEPS = ["Test Details", "Add Questions", "Review & Publish"];
+const CLASSES = ["3rd","4th","5th","6th","7th","8th","9th","10th","11th Bio","11th Commerce","11th Maths","12th Bio","12th Commerce","12th Maths"];
+const SUBJECTS = ["Mathematics","Physics","Chemistry","Biology","SST"];
+const STEPS = ["Test Details","Paste Questions","Review & Publish"];
 
-type QuestionForm = {
-  question: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  correctAnswer: "A" | "B" | "C" | "D";
-  marks: number;
-};
-
-const emptyQ = (): QuestionForm => ({
-  question: "", optionA: "", optionB: "", optionC: "", optionD: "",
-  correctAnswer: "A", marks: 1,
-});
+function parseQuestions(raw: string): { questions: MCQQuestion[]; errors: string[] } {
+  const blocks = raw.trim().split(/\n{2,}/);
+  const questions: MCQQuestion[] = [];
+  const errors: string[] = [];
+  blocks.forEach((block, i) => {
+    const lines = block.trim().split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length < 7) { if (lines.length > 0) errors.push(`Block ${i+1}: needs at least 7 lines.`); return; }
+    const q = lines[0].replace(/^Q\d+\.\s*/i, "").trim();
+    const optA = lines[1].replace(/^A\)\s*/i, "").trim();
+    const optB = lines[2].replace(/^B\)\s*/i, "").trim();
+    const optC = lines[3].replace(/^C\)\s*/i, "").trim();
+    const optD = lines[4].replace(/^D\)\s*/i, "").trim();
+    const ans = lines[5].replace(/^ANSWER:\s*/i, "").trim().toUpperCase();
+    const marksRaw = lines[6].replace(/^MARKS:\s*/i, "").trim();
+    if (!["A","B","C","D"].includes(ans)) { errors.push(`Block ${i+1}: Invalid answer "${ans}". Must be A/B/C/D.`); return; }
+    const marks = parseInt(marksRaw);
+    if (isNaN(marks) || marks < 1) { errors.push(`Block ${i+1}: Invalid marks "${marksRaw}".`); return; }
+    if (!q || !optA || !optB || !optC || !optD) { errors.push(`Block ${i+1}: Missing question text or options.`); return; }
+    questions.push({ id: generateId(), question: q, optionA: optA, optionB: optB, optionC: optC, optionD: optD, correctAnswer: ans as "A"|"B"|"C"|"D", marks });
+  });
+  return { questions, errors };
+}
 
 export default function CreateTest() {
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
-
-  const [info, setInfo] = useState({
-    title: "", subject: "", targetClass: "", duration: 60,
-    scheduledAt: "",
-  });
+  const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState({ title:"", subject:"", targetClass:"", duration:60, scheduledAt:"", endsAt:"" });
+  const [bulkText, setBulkText] = useState("");
   const [questions, setQuestions] = useState<MCQQuestion[]>([]);
-  const [currentQ, setCurrentQ] = useState<QuestionForm>(emptyQ());
-  const [qError, setQError] = useState("");
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
 
-  const infoValid =
-    info.title.trim() && info.subject.trim() && info.targetClass && info.duration > 0 && info.scheduledAt;
+  const infoValid = info.title.trim() && info.subject && info.targetClass && info.duration > 0 && info.scheduledAt && info.endsAt;
 
-  const addQuestion = () => {
-    if (!currentQ.question.trim() || !currentQ.optionA.trim() || !currentQ.optionB.trim() ||
-        !currentQ.optionC.trim() || !currentQ.optionD.trim()) {
-      setQError("Please fill in the question and all four options.");
-      return;
-    }
-    setQError("");
-    setQuestions((prev) => [...prev, { ...currentQ, id: generateId() }]);
-    setCurrentQ(emptyQ());
+  const handleParse = () => {
+    const { questions: qs, errors } = parseQuestions(bulkText);
+    setQuestions(qs);
+    setParseErrors(errors);
+    if (qs.length > 0) toast({ title: `Parsed ${qs.length} question(s) successfully.` });
   };
 
-  const removeQuestion = (id: string) => {
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
-  };
+  const totalMarks = questions.reduce((s, q) => s + q.marks, 0);
 
-  const totalMarks = questions.reduce((acc, q) => acc + q.marks, 0);
-
-  const publishTest = () => {
-    if (questions.length === 0) {
-      toast({ title: "Add at least one question.", variant: "destructive" });
-      return;
-    }
-    const scheduledAt = new Date(info.scheduledAt);
-    const endsAt = new Date(scheduledAt.getTime() + info.duration * 60 * 1000);
-    const test: Test = {
-      id: generateId(),
-      title: info.title,
-      subject: info.subject,
-      targetClass: info.targetClass,
-      duration: info.duration,
-      totalMarks,
-      scheduledAt: scheduledAt.toISOString(),
-      endsAt: endsAt.toISOString(),
-      createdAt: new Date().toISOString(),
-      questions,
-    };
-    addTest(test);
-    toast({ title: "Test Published!", description: `"${test.title}" is now live.` });
-    navigate("/teacher");
+  const publish = async (published: boolean) => {
+    if (questions.length === 0) { toast({ title:"Add at least one question.", variant:"destructive" }); return; }
+    setLoading(true);
+    try {
+      const test: Test = {
+        id: generateId(), title: info.title, subject: info.subject, targetClass: info.targetClass,
+        duration: info.duration, totalMarks,
+        scheduledAt: new Date(info.scheduledAt).toISOString(),
+        endsAt: new Date(info.endsAt).toISOString(),
+        createdAt: new Date().toISOString(), createdBy: user?.uid ?? "",
+        questions, published,
+      };
+      await saveTest(test);
+      toast({ title: published ? "Test published!" : "Test saved as draft.", description: test.title });
+      navigate("/teacher");
+    } catch (e: any) {
+      toast({ title: "Failed to save test.", description: e.message, variant: "destructive" });
+    } finally { setLoading(false); }
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Create New Test</h2>
-        <p className="text-muted-foreground">Build a multiple-choice test for your class.</p>
-      </div>
-
-      {/* Step Indicators */}
+      <div><h2 className="text-2xl font-bold tracking-tight">Bulk Test Creation</h2>
+        <p className="text-muted-foreground">Create a test and paste all MCQ questions at once.</p></div>
       <div className="flex items-center gap-0">
         {STEPS.map((s, i) => (
           <div key={i} className="flex items-center flex-1">
@@ -106,169 +94,92 @@ export default function CreateTest() {
               </div>
               <span className="text-sm font-medium hidden sm:block">{s}</span>
             </div>
-            {i < STEPS.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 ${i < step ? "bg-primary" : "bg-border"}`} />
-            )}
+            {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 ${i < step ? "bg-primary" : "bg-border"}`} />}
           </div>
         ))}
       </div>
 
-      {/* Step 0: Test Details */}
       {step === 0 && (
-        <Card>
-          <CardHeader><CardTitle>Test Information</CardTitle></CardHeader>
+        <Card><CardHeader><CardTitle>Test Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Test Title</Label>
-                <Input placeholder="e.g. Mid-Term Science Test" value={info.title}
-                  onChange={(e) => setInfo({ ...info, title: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label>Subject</Label>
-                <Input placeholder="e.g. Science" value={info.subject}
-                  onChange={(e) => setInfo({ ...info, subject: e.target.value })} />
+              <div className="space-y-1"><Label>Test Title</Label><Input placeholder="e.g. Mid-Term Science Test" value={info.title} onChange={e=>setInfo({...info,title:e.target.value})} /></div>
+              <div className="space-y-1"><Label>Subject</Label>
+                <Select value={info.subject} onValueChange={v=>setInfo({...info,subject:v})}>
+                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+                  <SelectContent>{SUBJECTS.map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Target Class</Label>
-                <Select value={info.targetClass} onValueChange={(v) => setInfo({ ...info, targetClass: v })}>
+              <div className="space-y-1"><Label>Target Class</Label>
+                <Select value={info.targetClass} onValueChange={v=>setInfo({...info,targetClass:v})}>
                   <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>
-                    {CLASSES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent>{CLASSES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
-                <Label>Duration (minutes)</Label>
-                <Input type="number" min={5} value={info.duration}
-                  onChange={(e) => setInfo({ ...info, duration: Number(e.target.value) })} />
-              </div>
+              <div className="space-y-1"><Label>Duration (minutes)</Label>
+                <Input type="number" min={5} value={info.duration} onChange={e=>setInfo({...info,duration:Number(e.target.value)})} /></div>
             </div>
-            <div className="space-y-1">
-              <Label>Scheduled Date & Time</Label>
-              <Input type="datetime-local" value={info.scheduledAt}
-                onChange={(e) => setInfo({ ...info, scheduledAt: e.target.value })} />
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-1"><Label>Start Date & Time</Label><Input type="datetime-local" value={info.scheduledAt} onChange={e=>setInfo({...info,scheduledAt:e.target.value})} /></div>
+              <div className="space-y-1"><Label>End Date & Time</Label><Input type="datetime-local" value={info.endsAt} onChange={e=>setInfo({...info,endsAt:e.target.value})} /></div>
             </div>
-            <Button className="w-full" onClick={() => setStep(1)} disabled={!infoValid}>
-              Next: Add Questions
-            </Button>
+            <Button className="w-full" onClick={()=>setStep(1)} disabled={!infoValid}>Next: Add Questions</Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Step 1: Add Questions */}
       {step === 1 && (
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add a Question</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {questions.length} question(s) added — {totalMarks} total marks
-              </p>
-            </CardHeader>
+          <Card><CardHeader><CardTitle>Paste MCQ Questions</CardTitle>
+            <p className="text-sm text-muted-foreground">Paste all questions in the format below. Separate each question with a blank line.</p>
+            <pre className="text-xs bg-muted p-3 rounded-md mt-2 font-mono whitespace-pre-wrap">{`Q1. What is 2 + 2?\nA) 1\nB) 2\nC) 4\nD) 5\nANSWER: C\nMARKS: 2\n\nQ2. Capital of India?\nA) Mumbai\nB) Delhi\nC) Kolkata\nD) Chennai\nANSWER: B\nMARKS: 1`}</pre>
+          </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <Label>Question</Label>
-                <Textarea placeholder="Enter your question here..." rows={3} value={currentQ.question}
-                  onChange={(e) => setCurrentQ({ ...currentQ, question: e.target.value })} />
-              </div>
-              <div className="grid md:grid-cols-2 gap-3">
-                {(["A","B","C","D"] as const).map((opt) => (
-                  <div key={opt} className="space-y-1">
-                    <Label>Option {opt}</Label>
-                    <Input placeholder={`Option ${opt}`} value={currentQ[`option${opt}`]}
-                      onChange={(e) => setCurrentQ({ ...currentQ, [`option${opt}`]: e.target.value })} />
-                  </div>
-                ))}
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
+              <Textarea rows={12} placeholder="Paste your questions here..." value={bulkText}
+                onChange={e=>{setBulkText(e.target.value);setQuestions([]);setParseErrors([]);}} />
+              <Button variant="secondary" className="w-full" onClick={handleParse} disabled={!bulkText.trim()}>Parse & Preview Questions</Button>
+              {parseErrors.length > 0 && <div className="space-y-1">{parseErrors.map((e,i)=><p key={i} className="text-sm text-destructive">⚠ {e}</p>)}</div>}
+              {questions.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Correct Answer</Label>
-                  <RadioGroup value={currentQ.correctAnswer}
-                    onValueChange={(v) => setCurrentQ({ ...currentQ, correctAnswer: v as "A"|"B"|"C"|"D" })}
-                    className="flex gap-4">
-                    {(["A","B","C","D"] as const).map((opt) => (
-                      <div key={opt} className="flex items-center gap-1.5">
-                        <RadioGroupItem value={opt} id={`correct-${opt}`} />
-                        <Label htmlFor={`correct-${opt}`} className="font-medium">{opt}</Label>
+                  <p className="text-sm font-medium text-green-700">{questions.length} question(s) parsed — {totalMarks} total marks</p>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {questions.map((q,i)=>(
+                      <div key={q.id} className="flex items-start justify-between gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                        <div><p className="font-medium">{i+1}. {q.question}</p><p className="text-xs text-muted-foreground mt-1">Answer: {q.correctAnswer} · {q.marks} mark(s)</p></div>
+                        <Button variant="ghost" size="icon" className="text-destructive flex-shrink-0" onClick={()=>setQuestions(prev=>prev.filter((_,idx)=>idx!==i))}><Trash2 className="w-4 h-4" /></Button>
                       </div>
                     ))}
-                  </RadioGroup>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label>Marks</Label>
-                  <Input type="number" min={1} max={10} value={currentQ.marks}
-                    onChange={(e) => setCurrentQ({ ...currentQ, marks: Number(e.target.value) })} />
-                </div>
-              </div>
-              {qError && <p className="text-sm text-destructive">{qError}</p>}
-              <Button onClick={addQuestion} className="w-full" variant="secondary">
-                <PlusCircle className="w-4 h-4 mr-2" /> Add Question
-              </Button>
+              )}
             </CardContent>
           </Card>
-
-          {questions.length > 0 && (
-            <Card>
-              <CardHeader><CardTitle>Added Questions ({questions.length})</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                {questions.map((q, idx) => (
-                  <div key={q.id} className="flex items-start justify-between gap-3 p-3 bg-muted/40 rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">
-                        <span className="text-muted-foreground mr-2">{idx + 1}.</span>
-                        {q.question}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Correct: <strong>{q.correctAnswer}</strong> — {q.marks} mark(s)
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeQuestion(q.id)}
-                      className="text-destructive hover:text-destructive flex-shrink-0">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
-            <Button className="flex-1" onClick={() => setStep(2)} disabled={questions.length === 0}>
-              Next: Review & Publish
-            </Button>
+            <Button variant="outline" onClick={()=>setStep(0)}>Back</Button>
+            <Button className="flex-1" onClick={()=>setStep(2)} disabled={questions.length===0}>Next: Review & Publish</Button>
           </div>
         </div>
       )}
 
-      {/* Step 2: Review & Publish */}
       {step === 2 && (
-        <Card>
-          <CardHeader><CardTitle>Review & Publish</CardTitle></CardHeader>
+        <Card><CardHeader><CardTitle>Review & Publish</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              {[
-                ["Title", info.title],
-                ["Subject", info.subject],
-                ["Target Class", info.targetClass],
-                ["Duration", `${info.duration} minutes`],
-                ["Scheduled At", new Date(info.scheduledAt).toLocaleString("en-IN")],
-                ["Total Questions", String(questions.length)],
-                ["Total Marks", String(totalMarks)],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between border-b pb-2">
-                  <span className="text-muted-foreground">{label}</span>
-                  <span className="font-semibold">{value}</span>
-                </div>
+            <div className="grid md:grid-cols-2 gap-3 text-sm">
+              {[["Title",info.title],["Subject",info.subject],["Class",info.targetClass],["Duration",`${info.duration} min`],
+                ["Start",new Date(info.scheduledAt).toLocaleString("en-IN")],["End",new Date(info.endsAt).toLocaleString("en-IN")],
+                ["Questions",String(questions.length)],["Total Marks",String(totalMarks)]].map(([l,v])=>(
+                <div key={l} className="flex justify-between border-b pb-2"><span className="text-muted-foreground">{l}</span><span className="font-semibold">{v}</span></div>
               ))}
             </div>
             <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground" onClick={publishTest}>
-                Publish Test
+              <Button variant="outline" onClick={()=>setStep(1)}>Back</Button>
+              <Button variant="secondary" className="flex-1" onClick={()=>publish(false)} disabled={loading}>
+                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Save as Draft
+              </Button>
+              <Button className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground" onClick={()=>publish(true)} disabled={loading}>
+                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Publish Test
               </Button>
             </div>
           </CardContent>

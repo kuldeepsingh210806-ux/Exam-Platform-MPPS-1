@@ -1,115 +1,70 @@
-import { getStudents, getTests, getSubmissions } from "@/lib/store";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { listenTests, listenStudents, listenAttempts, Test, StudentProfile, Attempt } from "@/lib/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users, ClipboardList, BarChart2, PlusCircle, Activity } from "lucide-react";
 
 export default function TeacherDashboard() {
-  const students = getStudents();
-  const tests = getTests();
-  const submissions = getSubmissions();
+  const { teacherProfile } = useAuth();
+  const [tests, setTests] = useState<Test[]>([]);
+  const [students, setStudents] = useState<StudentProfile[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const testsToday = tests.filter((t) => new Date(t.scheduledAt) >= today).length;
+  useEffect(() => { const u = listenTests(setTests); return u; }, []);
+  useEffect(() => { const u = listenStudents(setStudents); return u; }, []);
+  useEffect(() => { const u = listenAttempts(setAttempts); return u; }, []);
 
-  const recentSubmissions = submissions
-    .slice()
-    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+  const recent = attempts
+    .filter((a) => a.submitted)
+    .sort((a, b) => new Date(b.submittedAt!).getTime() - new Date(a.submittedAt!).getTime())
     .slice(0, 5);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Teacher Dashboard</h2>
-        <p className="text-muted-foreground">Welcome back. Here is a summary of school activity.</p>
+        <p className="text-muted-foreground">Welcome, {teacherProfile?.name} ({teacherProfile?.subject})</p>
       </div>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Total Tests</CardTitle>
-            <ClipboardList className="w-4 h-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tests.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="w-4 h-4 text-accent" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{students.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
-            <BarChart2 className="w-4 h-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{submissions.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Active / Upcoming</CardTitle>
-            <Activity className="w-4 h-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{testsToday}</div>
-          </CardContent>
-        </Card>
+        {[
+          { label: "Total Tests", value: tests.length, icon: ClipboardList, color: "text-primary" },
+          { label: "Total Students", value: students.length, icon: Users, color: "text-accent" },
+          { label: "Total Submissions", value: attempts.filter(a=>a.submitted).length, icon: BarChart2, color: "text-green-600" },
+          { label: "Published Tests", value: tests.filter(t=>t.published).length, icon: Activity, color: "text-blue-500" },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <Card key={label}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">{label}</CardTitle>
+              <Icon className={`w-4 h-4 ${color}`} />
+            </CardHeader>
+            <CardContent><div className="text-2xl font-bold">{value}</div></CardContent>
+          </Card>
+        ))}
       </div>
-
       <div className="grid gap-4 md:grid-cols-3">
-        <Link href="/teacher/create-test">
-          <Button className="w-full" size="lg">
-            <PlusCircle className="w-5 h-5 mr-2" /> Create New Test
-          </Button>
-        </Link>
-        <Link href="/teacher/students">
-          <Button variant="secondary" className="w-full" size="lg">
-            <Users className="w-5 h-5 mr-2" /> Manage Students
-          </Button>
-        </Link>
-        <Link href="/teacher/results">
-          <Button variant="outline" className="w-full" size="lg">
-            <BarChart2 className="w-5 h-5 mr-2" /> View All Results
-          </Button>
-        </Link>
+        <Link href="/teacher/create-test"><Button className="w-full" size="lg"><PlusCircle className="w-5 h-5 mr-2" />Create New Test</Button></Link>
+        <Link href="/teacher/students"><Button variant="secondary" className="w-full" size="lg"><Users className="w-5 h-5 mr-2" />Manage Students</Button></Link>
+        <Link href="/teacher/results"><Button variant="outline" className="w-full" size="lg"><BarChart2 className="w-5 h-5 mr-2" />View All Results</Button></Link>
       </div>
-
-      {recentSubmissions.length > 0 && (
+      {recent.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Submissions</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Recent Submissions</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Test</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader><TableRow><TableHead>Student ID</TableHead><TableHead>Test</TableHead><TableHead>Score</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
               <TableBody>
-                {recentSubmissions.map((sub) => {
-                  const student = students.find((s) => s.id === sub.studentId);
-                  const test = tests.find((t) => t.id === sub.testId);
+                {recent.map((a) => {
+                  const t = tests.find((x) => x.id === a.testId);
+                  const s = students.find((x) => x.uid === a.studentId);
                   return (
-                    <TableRow key={sub.id}>
-                      <TableCell className="font-medium">{student?.name ?? "Unknown"}</TableCell>
-                      <TableCell>{test?.title ?? "Unknown"}</TableCell>
-                      <TableCell>{sub.score}/{sub.totalMarks} ({sub.percentage.toFixed(1)}%)</TableCell>
-                      <TableCell>{new Date(sub.submittedAt).toLocaleDateString("en-IN")}</TableCell>
+                    <TableRow key={a.id}>
+                      <TableCell>{s?.name ?? a.studentId.slice(0,8)}</TableCell>
+                      <TableCell>{t?.title ?? "Unknown"}</TableCell>
+                      <TableCell>{a.score}/{a.totalMarks} ({a.percentage?.toFixed(1)}%)</TableCell>
+                      <TableCell>{new Date(a.submittedAt!).toLocaleDateString("en-IN")}</TableCell>
                     </TableRow>
                   );
                 })}
