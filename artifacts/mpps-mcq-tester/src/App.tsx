@@ -1,4 +1,5 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import Home from "@/pages/home";
 import StudentPortal from "@/pages/student-portal";
 import TeacherPortal from "@/pages/teacher-portal";
 import PrincipalPortal from "@/pages/principal-portal";
+import { initializeStore } from "@/lib/store";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,10 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    initializeStore();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

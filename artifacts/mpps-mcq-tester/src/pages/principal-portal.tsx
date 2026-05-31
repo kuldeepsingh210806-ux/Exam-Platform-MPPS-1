@@ -1,9 +1,15 @@
+import { Switch, Route } from "wouter";
 import { PortalLayout } from "@/components/portal-layout";
-import { Building2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import PrincipalDashboard from "./principal/dashboard";
+import SchoolAnalytics from "./principal/analytics";
+import ClassRankings from "./principal/rankings";
+import PerformanceReport from "./principal/performance";
+import NoticeBoard from "./principal/notices";
+import PrincipalReports from "./principal/reports";
 
 export default function PrincipalPortal() {
   const links = [
+    { label: "Dashboard", href: "" },
     { label: "School Analytics", href: "/analytics" },
     { label: "Class Rankings", href: "/rankings" },
     { label: "Performance Reports", href: "/performance" },
@@ -13,24 +19,17 @@ export default function PrincipalPortal() {
 
   return (
     <PortalLayout title="Principal Portal" links={links} basePath="/principal">
-      <div className="max-w-4xl mx-auto h-full flex flex-col">
-        <Card className="border-t-4 border-t-accent shadow-sm flex-1 flex flex-col items-center justify-center p-12 text-center">
-          <CardHeader className="items-center pb-2">
-            <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-6">
-              <Building2 className="w-10 h-10 text-accent" />
-            </div>
-            <CardTitle className="text-3xl font-bold">Administration Hub</CardTitle>
-            <CardDescription className="text-base mt-2 max-w-md mx-auto">
-              The administrative oversight portal is in development. Expect powerful school-wide analytics, class rankings, and instant reporting capabilities.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-8">
-            <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-accent/10 text-accent font-semibold text-sm">
-              Coming Soon
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Switch>
+        <Route path="/principal" component={PrincipalDashboard} />
+        <Route path="/principal/analytics" component={SchoolAnalytics} />
+        <Route path="/principal/rankings" component={ClassRankings} />
+        <Route path="/principal/performance" component={PerformanceReport} />
+        <Route path="/principal/notices" component={NoticeBoard} />
+        <Route path="/principal/reports" component={PrincipalReports} />
+        <Route>
+          <div className="p-8 text-center text-muted-foreground">Page not found in Principal Portal</div>
+        </Route>
+      </Switch>
     </PortalLayout>
   );
 }

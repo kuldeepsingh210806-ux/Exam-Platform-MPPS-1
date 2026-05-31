@@ -1,9 +1,15 @@
+import { Switch, Route, useRoute } from "wouter";
 import { PortalLayout } from "@/components/portal-layout";
-import { Presentation } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import TeacherDashboard from "./teacher/dashboard";
+import CreateTest from "./teacher/create-test";
+import UploadMCQ from "./teacher/upload-mcq";
+import ManageStudents from "./teacher/manage-students";
+import TeacherResults from "./teacher/results";
+import TeacherReports from "./teacher/reports";
 
 export default function TeacherPortal() {
   const links = [
+    { label: "Dashboard", href: "" },
     { label: "Create Tests", href: "/create-test" },
     { label: "Upload MCQ Questions", href: "/upload-mcq" },
     { label: "Manage Students", href: "/students" },
@@ -13,24 +19,17 @@ export default function TeacherPortal() {
 
   return (
     <PortalLayout title="Teacher Portal" links={links} basePath="/teacher">
-      <div className="max-w-4xl mx-auto h-full flex flex-col">
-        <Card className="border-t-4 border-t-primary shadow-sm flex-1 flex flex-col items-center justify-center p-12 text-center">
-          <CardHeader className="items-center pb-2">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-              <Presentation className="w-10 h-10 text-primary" />
-            </div>
-            <CardTitle className="text-3xl font-bold">Teacher Dashboard</CardTitle>
-            <CardDescription className="text-base mt-2 max-w-md mx-auto">
-              The faculty portal is being built. You will soon have access to tools for test creation, student management, and comprehensive performance reporting.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-8">
-             <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-              Coming Soon
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Switch>
+        <Route path="/teacher" component={TeacherDashboard} />
+        <Route path="/teacher/create-test" component={CreateTest} />
+        <Route path="/teacher/upload-mcq" component={UploadMCQ} />
+        <Route path="/teacher/students" component={ManageStudents} />
+        <Route path="/teacher/results" component={TeacherResults} />
+        <Route path="/teacher/reports" component={TeacherReports} />
+        <Route>
+          <div className="p-8 text-center text-muted-foreground">Page not found in Teacher Portal</div>
+        </Route>
+      </Switch>
     </PortalLayout>
   );
 }
