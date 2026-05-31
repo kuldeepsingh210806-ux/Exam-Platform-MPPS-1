@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "MPPS MCQ Tester"
+version = "1.0.0"
+id = "artifacts/mpps-mcq-tester"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18545
+
+[services.development]
+run = "pnpm --filter @workspace/mpps-mcq-tester run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/mpps-mcq-tester", "run", "build" ]
+publicDir = "artifacts/mpps-mcq-tester/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18545"
+BASE_PATH = "/"
