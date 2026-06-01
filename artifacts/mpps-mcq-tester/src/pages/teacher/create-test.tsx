@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, Trash2 } from "lucide-react";
 
@@ -111,18 +111,12 @@ export default function CreateTest() {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-1"><Label>Test Title</Label><Input placeholder="e.g. Mid-Term Science Test" value={info.title} onChange={e=>setInfo({...info,title:e.target.value})} /></div>
               <div className="space-y-1"><Label>Subject</Label>
-                <Select value={info.subject} onValueChange={v=>setInfo({...info,subject:v})}>
-                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                  <SelectContent>{SUBJECTS.map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                </Select>
+                <SearchableSelect value={info.subject} onValueChange={v=>setInfo({...info,subject:v})} options={SUBJECTS} placeholder="Select subject" />
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-1"><Label>Target Class</Label>
-                <Select value={info.targetClass} onValueChange={v=>setInfo({...info,targetClass:v})}>
-                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>{CLASSES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
+                <SearchableSelect value={info.targetClass} onValueChange={v=>setInfo({...info,targetClass:v})} options={CLASSES} placeholder="Select class" />
               </div>
               <div className="space-y-1"><Label>Duration (minutes)</Label>
                 <Input type="number" min={5} value={info.duration} onChange={e=>setInfo({...info,duration:Number(e.target.value)})} /></div>

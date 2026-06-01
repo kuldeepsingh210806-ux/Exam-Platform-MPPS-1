@@ -3,7 +3,7 @@ import { listenTests, listenStudents, listenAttempts, Test, StudentProfile, Atte
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import { ClipboardList } from "lucide-react";
 
@@ -31,22 +31,25 @@ export default function TeacherResults() {
 
   const avg = enriched.length > 0 ? enriched.reduce((s,r)=>s+(r.a.percentage??0),0)/enriched.length : 0;
 
+  const classOptions = [
+    { value: "all", label: "All Classes" },
+    ...classes.map(c => ({ value: c, label: c })),
+  ];
+  const testOptions = [
+    { value: "all", label: "All Tests" },
+    ...tests.map(t => ({ value: t.id, label: t.title })),
+  ];
+
   return (
     <div className="space-y-6">
       <div><h2 className="text-2xl font-bold tracking-tight">View Results</h2>
         <p className="text-muted-foreground">All student submissions.</p></div>
       <div className="flex flex-wrap gap-4">
         <div className="space-y-1 min-w-[180px]"><Label>Filter by Class</Label>
-          <Select value={filterClass} onValueChange={setFilterClass}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All Classes</SelectItem>{classes.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-          </Select>
+          <SearchableSelect value={filterClass} onValueChange={setFilterClass} options={classOptions} placeholder="All Classes" />
         </div>
         <div className="space-y-1 min-w-[220px]"><Label>Filter by Test</Label>
-          <Select value={filterTest} onValueChange={setFilterTest}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All Tests</SelectItem>{tests.map(t=><SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}</SelectContent>
-          </Select>
+          <SearchableSelect value={filterTest} onValueChange={setFilterTest} options={testOptions} placeholder="All Tests" />
         </div>
       </div>
       {enriched.length > 0 && <p className="text-sm text-muted-foreground"><strong>{enriched.length}</strong> submission(s) · Avg: <strong>{avg.toFixed(1)}%</strong></p>}

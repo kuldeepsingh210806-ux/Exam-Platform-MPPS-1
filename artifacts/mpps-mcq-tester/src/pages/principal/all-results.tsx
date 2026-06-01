@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { listenTests, listenStudents, listenAttempts, Test, StudentProfile, Attempt } from "@/lib/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -20,7 +20,7 @@ export default function AllResults() {
   useEffect(() => { const u = listenStudents(setStudents); return u; }, []);
   useEffect(() => { const u = listenAttempts(setAttempts); return u; }, []);
 
-  const classes = ["all", ...new Set(students.map(s=>s.class))].sort((a,b)=>a==="all"?-1:a.localeCompare(b));
+  const classes = [...new Set(students.map(s=>s.class))].sort();
 
   const rows = attempts
     .filter(a=>a.submitted)
@@ -38,22 +38,25 @@ export default function AllResults() {
     { range:"90-100%", count: rows.filter(r=>(r.a.percentage??0)>=90).length },
   ];
 
+  const classOptions = [
+    { value: "all", label: "All Classes" },
+    ...classes.map(c => ({ value: c, label: c })),
+  ];
+  const testOptions = [
+    { value: "all", label: "All Tests" },
+    ...tests.map(t => ({ value: t.id, label: t.title })),
+  ];
+
   return (
     <div className="space-y-6">
       <div><h2 className="text-2xl font-bold tracking-tight">All Results</h2>
         <p className="text-muted-foreground">Complete result view across all classes and tests.</p></div>
       <div className="flex flex-wrap gap-4">
         <div className="space-y-1 min-w-[180px]"><Label>Filter by Class</Label>
-          <Select value={filterClass} onValueChange={setFilterClass}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{classes.map(c=><SelectItem key={c} value={c}>{c==="all"?"All Classes":c}</SelectItem>)}</SelectContent>
-          </Select>
+          <SearchableSelect value={filterClass} onValueChange={setFilterClass} options={classOptions} placeholder="All Classes" />
         </div>
         <div className="space-y-1 min-w-[220px]"><Label>Filter by Test</Label>
-          <Select value={filterTest} onValueChange={setFilterTest}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All Tests</SelectItem>{tests.map(t=><SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}</SelectContent>
-          </Select>
+          <SearchableSelect value={filterTest} onValueChange={setFilterTest} options={testOptions} placeholder="All Tests" />
         </div>
       </div>
       {rows.length > 0 && (

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -65,10 +65,12 @@ export default function PrincipalNotices() {
                 <Input placeholder="Notice title..." value={form.title} onChange={e=>setForm({...form,title:e.target.value})} />
               </div>
               <div className="space-y-1"><Label>Target Audience</Label>
-                <Select value={form.targetAudience} onValueChange={v=>setForm({...form,targetAudience:v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{AUDIENCES.map(a=><SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={form.targetAudience}
+                  onValueChange={v=>setForm({...form,targetAudience:v})}
+                  options={AUDIENCES}
+                  placeholder="Select audience"
+                />
               </div>
             </div>
             <div className="space-y-1"><Label>Content</Label>

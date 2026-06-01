@@ -7,11 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 
-const SUBJECTS = ["Mathematics","Physics","Chemistry","Biology","SST"];
+const SUBJECTS = [
+  "Mathematics","Physics","Chemistry","Biology","English","Hindi",
+  "History","Geography","Political Science","Economics",
+  "Accountancy","Business Studies","Physical Education",
+  "Computer Science","Informatics Practices","Sociology",
+  "Psychology","Entrepreneurship","Environmental Science",
+];
 const TEACHER_PASSKEY = "MPPS01";
 
 export default function TeacherLogin() {
@@ -155,12 +161,12 @@ export default function TeacherLogin() {
                     </div>
                     <div className="space-y-1">
                       <Label>Subject</Label>
-                      <Select value={regForm.subject} onValueChange={(v) => setRegForm({ ...regForm, subject: v })}>
-                        <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                        <SelectContent>
-                          {SUBJECTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        value={regForm.subject}
+                        onValueChange={(v) => setRegForm({ ...regForm, subject: v })}
+                        options={SUBJECTS}
+                        placeholder="Select subject"
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label>Password</Label>

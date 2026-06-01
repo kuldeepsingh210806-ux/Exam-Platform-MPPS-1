@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Trash2, PlusCircle, FileText, Upload } from "lucide-react";
 
 type QForm = {
@@ -118,18 +118,12 @@ export default function UploadMCQ() {
 
       <div className="space-y-1">
         <Label>Select Test to Add Questions To</Label>
-        <Select value={selectedTestId} onValueChange={setSelectedTestId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a test..." />
-          </SelectTrigger>
-          <SelectContent>
-            {tests.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.title} — {t.targetClass} ({t.questions.length} Qs)
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          value={selectedTestId}
+          onValueChange={setSelectedTestId}
+          options={tests.map(t => ({ value: t.id, label: `${t.title} — ${t.targetClass} (${t.questions.length} Qs)` }))}
+          placeholder="Choose a test..."
+        />
         {tests.length === 0 && (
           <p className="text-sm text-muted-foreground">No tests found. Create a test first.</p>
         )}

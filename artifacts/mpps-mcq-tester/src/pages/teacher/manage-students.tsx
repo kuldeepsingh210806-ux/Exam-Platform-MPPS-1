@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Trash2, Users } from "lucide-react";
 
@@ -33,6 +33,11 @@ export default function ManageStudents() {
     toast({ title: "Student removed." });
   };
 
+  const classOptions = [
+    { value: "all", label: "All Classes" },
+    ...CLASSES.map(c => ({ value: c, label: c })),
+  ];
+
   return (
     <div className="space-y-6">
       <div><h2 className="text-2xl font-bold tracking-tight">Manage Students</h2>
@@ -42,13 +47,14 @@ export default function ManageStudents() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input className="pl-9" placeholder="Search name, roll, mobile..." value={search} onChange={e=>setSearch(e.target.value)} />
         </div>
-        <Select value={filterClass} onValueChange={setFilterClass}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Classes</SelectItem>
-            {CLASSES.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="w-48">
+          <SearchableSelect
+            value={filterClass}
+            onValueChange={setFilterClass}
+            options={classOptions}
+            placeholder="All Classes"
+          />
+        </div>
       </div>
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">

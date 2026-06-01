@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { listenTests, listenStudents, listenAttempts, getAllViolations, Test, StudentProfile, Attempt, Violation } from "@/lib/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Printer, FileText } from "lucide-react";
@@ -32,6 +32,8 @@ export default function TeacherReports() {
   const avg = testAttempts.length>0 ? testAttempts.reduce((s,r)=>s+(r.a.percentage??0),0)/testAttempts.length : 0;
   const passCount = testAttempts.filter(r=>(r.a.percentage??0)>=40).length;
 
+  const testOptions = tests.map(t => ({ value: t.id, label: t.title }));
+
   return (
     <div className="space-y-6">
       <div className="print:hidden">
@@ -40,10 +42,12 @@ export default function TeacherReports() {
       </div>
       <div className="print:hidden space-y-4">
         <div className="space-y-1 max-w-sm"><Label>Select Test</Label>
-          <Select value={selectedTestId} onValueChange={v=>{setSelectedTestId(v);setGenerated(false);}}>
-            <SelectTrigger><SelectValue placeholder="Choose a test..." /></SelectTrigger>
-            <SelectContent>{tests.map(t=><SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}</SelectContent>
-          </Select>
+          <SearchableSelect
+            value={selectedTestId}
+            onValueChange={v=>{setSelectedTestId(v);setGenerated(false);}}
+            options={testOptions}
+            placeholder="Choose a test..."
+          />
         </div>
         <Button onClick={()=>setGenerated(true)} disabled={!selectedTestId}><FileText className="w-4 h-4 mr-2" />Generate Report</Button>
       </div>

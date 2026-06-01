@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
@@ -135,21 +135,21 @@ export default function StudentLogin() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label>Class</Label>
-                      <Select value={regForm.class} onValueChange={(v) => setRegForm({ ...regForm, class: v })}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          {CLASSES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        value={regForm.class}
+                        onValueChange={(v) => setRegForm({ ...regForm, class: v })}
+                        options={CLASSES}
+                        placeholder="Select"
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label>Section</Label>
-                      <Select value={regForm.section} onValueChange={(v) => setRegForm({ ...regForm, section: v })}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          {SECTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        value={regForm.section}
+                        onValueChange={(v) => setRegForm({ ...regForm, section: v })}
+                        options={SECTIONS}
+                        placeholder="Select"
+                      />
                     </div>
                   </div>
                   <div className="space-y-1">

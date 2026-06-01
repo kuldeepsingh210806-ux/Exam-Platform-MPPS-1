@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { getStudents, getSubmissions } from "@/lib/store";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -28,6 +28,11 @@ export default function ClassRankings() {
     .filter((r) => r.testsTaken > 0)
     .sort((a, b) => b.avgPct - a.avgPct);
 
+  const classOptions = [
+    { value: "all", label: "All Classes" },
+    ...classes.map(c => ({ value: c, label: c })),
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -37,13 +42,12 @@ export default function ClassRankings() {
 
       <div className="space-y-1 max-w-xs">
         <Label>Filter by Class</Label>
-        <Select value={filterClass} onValueChange={setFilterClass}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Classes</SelectItem>
-            {classes.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          value={filterClass}
+          onValueChange={setFilterClass}
+          options={classOptions}
+          placeholder="All Classes"
+        />
       </div>
 
       {ranked.length === 0 ? (
