@@ -12,7 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, Trash2 } from "lucide-react";
 
 const CLASSES = ["3rd","4th","5th","6th","7th","8th","9th","10th","11th Bio","11th Commerce","11th Maths","12th Bio","12th Commerce","12th Maths"];
-const SUBJECTS = ["Mathematics","Physics","Chemistry","Biology","SST"];
+const SUBJECTS = [
+  "Mathematics","Physics","Chemistry","Biology","English","Hindi",
+  "History","Geography","Political Science","Economics",
+  "Accountancy","Business Studies","Physical Education",
+  "Computer Science","Informatics Practices","Sociology",
+  "Psychology","Entrepreneurship","Environmental Science",
+];
 const STEPS = ["Test Details","Paste Questions","Review & Publish"];
 
 function parseQuestions(raw: string): { questions: MCQQuestion[]; errors: string[] } {

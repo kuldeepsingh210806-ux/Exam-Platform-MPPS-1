@@ -1,136 +1,124 @@
 import { Link } from "wouter";
-import { GraduationCap, Users, LayoutDashboard } from "lucide-react";
+import { GraduationCap, Users, LayoutDashboard, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+
+const portals = [
+  {
+    icon: Users,
+    title: "Student Portal",
+    description: "Login or register to take live tests, view your results, and track your progress.",
+    href: "/student-login",
+    delay: 0.1,
+    accent: false,
+  },
+  {
+    icon: GraduationCap,
+    title: "Teacher Portal",
+    description: "Passkey protected. Create and manage tests, monitor student performance, and generate reports.",
+    href: "/teacher-login",
+    delay: 0.2,
+    accent: false,
+  },
+  {
+    icon: LayoutDashboard,
+    title: "Principal Portal",
+    description: "Passkey protected. School-wide oversight, analytics, rankings, and administrative tools.",
+    href: "/principal-login",
+    delay: 0.3,
+    accent: true,
+  },
+];
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-accent selection:text-white">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground py-8 border-b-4 border-accent">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+      <header className="bg-primary text-primary-foreground py-6 shadow-md">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <img
                 src="/mpps-logo.jpg"
                 alt="MPPS Logo"
-                className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-accent/40 bg-white"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover shadow-md border-2 border-white/20 bg-white"
               />
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">MP Public School</h1>
-                <p className="text-primary-foreground/80 font-medium tracking-wide">Mathuranagar</p>
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">MP Public School</h1>
+                <p className="text-primary-foreground/70 text-sm font-medium tracking-wide">Mathuranagar</p>
               </div>
             </div>
-            <div className="text-center md:text-right hidden sm:block">
-              <p className="text-sm font-semibold text-accent tracking-wider uppercase">Official Portal</p>
-              <p className="text-sm text-primary-foreground/80 mt-1 max-w-xs">
-                Empowering Futures Through Excellence in Education
-              </p>
-            </div>
+            <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-accent/20 border border-accent/30 text-accent text-xs font-semibold tracking-wider uppercase">
+              Official Portal
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-12 md:py-16">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Welcome to MPPS MCQ Tester
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Select your portal to access live tests, results, and administrative tools.
-          </p>
+      {/* Hero */}
+      <section className="bg-gradient-to-b from-primary/5 to-background border-b border-border py-14 md:py-20">
+        <div className="container mx-auto px-4 md:px-8 text-center max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">
+              Welcome to MPPS MCQ Tester
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              Your all-in-one platform for conducting, managing, and analysing multiple-choice assessments.
+              Select your portal below to get started.
+            </p>
+          </motion.div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Student Portal */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="group flex flex-col bg-card border border-border shadow-sm rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300"
-          >
-            <div className="p-8 pb-6 bg-gradient-to-br from-blue-50 to-white border-b border-border">
-              <div className="w-14 h-14 bg-primary text-primary-foreground rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Users className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Student Portal</h3>
-              <p className="text-muted-foreground text-sm">Login or register to take tests and view results.</p>
-            </div>
-            <div className="p-8 flex-1 flex flex-col">
-              <ul className="space-y-3 mb-8 flex-1">
-                {["Live Tests","Upcoming Tests","Previous Tests","Results","Review Answers","Notices"].map((f) => (
-                  <li key={f} className="flex items-center text-sm font-medium text-foreground/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent mr-3" />{f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/student-login" className="block w-full py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-center rounded-lg font-semibold transition-colors">
-                Enter Student Portal
-              </Link>
-            </div>
-          </motion.div>
+      {/* Portal Cards */}
+      <main className="flex-1 container mx-auto px-4 md:px-8 py-14 md:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
+          {portals.map(({ icon: Icon, title, description, href, delay, accent }) => (
+            <motion.div
+              key={title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay, duration: 0.45, ease: "easeOut" }}
+              className="group flex flex-col bg-card border border-border rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+            >
+              <div className="flex flex-col flex-1 p-8 gap-6">
+                {/* Icon */}
+                <div className={`w-13 h-13 w-[52px] h-[52px] flex items-center justify-center rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-105
+                  ${accent ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}`}>
+                  <Icon className="w-6 h-6" />
+                </div>
 
-          {/* Teacher Portal */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="group flex flex-col bg-card border border-border shadow-sm rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300"
-          >
-            <div className="p-8 pb-6 bg-gradient-to-br from-blue-50 to-white border-b border-border">
-              <div className="w-14 h-14 bg-primary text-primary-foreground rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <GraduationCap className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Teacher Portal</h3>
-              <p className="text-muted-foreground text-sm">Passkey protected. Create tests and manage students.</p>
-            </div>
-            <div className="p-8 flex-1 flex flex-col">
-              <ul className="space-y-3 mb-8 flex-1">
-                {["Bulk Test Creation","Edit / Delete Tests","Student Management","Results & Analytics","PDF Reports","Violation Tracking"].map((f) => (
-                  <li key={f} className="flex items-center text-sm font-medium text-foreground/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent mr-3" />{f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/teacher-login" className="block w-full py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-center rounded-lg font-semibold transition-colors">
-                Enter Teacher Portal
-              </Link>
-            </div>
-          </motion.div>
+                {/* Text */}
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-xl font-bold text-foreground tracking-tight">{title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+                </div>
 
-          {/* Principal Portal */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="group flex flex-col bg-card border border-border shadow-sm rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300"
-          >
-            <div className="p-8 pb-6 bg-gradient-to-br from-blue-50 to-white border-b border-border">
-              <div className="w-14 h-14 bg-primary text-primary-foreground rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <LayoutDashboard className="w-7 h-7" />
+                {/* Button */}
+                <Link
+                  href={href}
+                  className={`inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-sm font-semibold transition-colors duration-200
+                    ${accent
+                      ? "bg-accent hover:bg-accent/90 text-accent-foreground"
+                      : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                    }`}
+                >
+                  Enter Portal
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
               </div>
-              <h3 className="text-2xl font-bold mb-2">Principal Portal</h3>
-              <p className="text-muted-foreground text-sm">Passkey protected. School-wide oversight and analytics.</p>
-            </div>
-            <div className="p-8 flex-1 flex flex-col">
-              <ul className="space-y-3 mb-8 flex-1">
-                {["School Analytics","Class Rankings","Performance Reports","Notice Board","PDF Reports","Student Records"].map((f) => (
-                  <li key={f} className="flex items-center text-sm font-medium text-foreground/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent mr-3" />{f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/principal-login" className="block w-full py-3 px-4 bg-accent hover:bg-accent/90 text-accent-foreground text-center rounded-lg font-semibold transition-colors shadow-sm">
-                Enter Principal Portal
-              </Link>
-            </div>
-          </motion.div>
+            </motion.div>
+          ))}
         </div>
       </main>
 
-      <footer className="bg-primary text-primary-foreground py-8 border-t border-primary-foreground/10">
-        <div className="container mx-auto px-4 text-center text-sm text-primary-foreground/70">
-          <p className="font-medium text-primary-foreground mb-2">MP Public School, Mathuranagar</p>
+      {/* Footer */}
+      <footer className="bg-primary text-primary-foreground py-6 border-t border-primary-foreground/10">
+        <div className="container mx-auto px-4 text-center text-sm text-primary-foreground/60">
+          <p className="font-medium text-primary-foreground/80 mb-1">MP Public School, Mathuranagar</p>
           <p>© {new Date().getFullYear()} MPPS MCQ Tester. All rights reserved.</p>
         </div>
       </footer>
