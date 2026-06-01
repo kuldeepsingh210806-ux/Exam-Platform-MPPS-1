@@ -1,4 +1,5 @@
 import { Switch, Route, useRoute } from "wouter";
+import { LayoutDashboard, Zap, CalendarClock, History, BarChart2, Bell } from "lucide-react";
 import { PortalLayout } from "@/components/portal-layout";
 import StudentDashboard from "./student/dashboard";
 import LiveTests from "./student/live-tests";
@@ -13,12 +14,12 @@ export default function StudentPortal() {
   const [isTakingTest] = useRoute("/student/take/:testId");
 
   const links = [
-    { label: "Dashboard", href: "" },
-    { label: "Live Tests", href: "/live" },
-    { label: "Upcoming Tests", href: "/upcoming" },
-    { label: "Previous Tests", href: "/previous" },
-    { label: "My Results", href: "/results" },
-    { label: "Notices", href: "/notices" },
+    { label: "Dashboard",      href: "",          icon: LayoutDashboard },
+    { label: "Live Tests",     href: "/live",     icon: Zap             },
+    { label: "Upcoming Tests", href: "/upcoming", icon: CalendarClock   },
+    { label: "Previous Tests", href: "/previous", icon: History         },
+    { label: "My Results",     href: "/results",  icon: BarChart2       },
+    { label: "Notices",        href: "/notices",  icon: Bell            },
   ];
 
   if (isTakingTest) {
@@ -32,13 +33,13 @@ export default function StudentPortal() {
   return (
     <PortalLayout title="Student Portal" links={links} basePath="/student">
       <Switch>
-        <Route path="/student" component={StudentDashboard} />
-        <Route path="/student/live" component={LiveTests} />
-        <Route path="/student/upcoming" component={UpcomingTests} />
-        <Route path="/student/previous" component={PreviousTests} />
-        <Route path="/student/results" component={StudentResults} />
+        <Route path="/student"              component={StudentDashboard} />
+        <Route path="/student/live"         component={LiveTests} />
+        <Route path="/student/upcoming"     component={UpcomingTests} />
+        <Route path="/student/previous"     component={PreviousTests} />
+        <Route path="/student/results"      component={StudentResults} />
         <Route path="/student/review/:testId" component={ReviewAnswers} />
-        <Route path="/student/notices" component={StudentNotices} />
+        <Route path="/student/notices"      component={StudentNotices} />
         <Route><div className="p-8 text-center text-muted-foreground">Page not found</div></Route>
       </Switch>
     </PortalLayout>

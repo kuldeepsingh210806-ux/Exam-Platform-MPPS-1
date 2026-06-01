@@ -1,14 +1,20 @@
-import { ReactNode } from "react";
+import { ReactNode, ComponentType } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Menu, LogOut } from "lucide-react";
+import { ArrowLeft, Menu, LogOut, LucideProps } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth-context";
 
+interface NavLink {
+  label: string;
+  href: string;
+  icon?: ComponentType<LucideProps>;
+}
+
 interface PortalLayoutProps {
   children: ReactNode;
   title: string;
-  links: { label: string; href: string }[];
+  links: NavLink[];
   basePath: string;
 }
 
@@ -26,52 +32,66 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
     role === "teacher" ? teacherProfile?.name :
     "Principal";
 
-  const NavLinks = () => (
-    <>
+  const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <div className="space-y-0.5">
       {links.map((link) => {
         const fullPath = `${basePath}${link.href}`;
         const isActive = location === fullPath || (link.href === "" && location === basePath);
+        const Icon = link.icon;
         return (
-          <Link key={link.href} href={fullPath}>
-            <span className={`block px-4 py-3 rounded-md mb-1 font-medium transition-colors cursor-pointer ${
-              isActive
-                ? "bg-accent text-accent-foreground shadow-sm"
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            }`}>
-              {link.label}
+          <Link key={link.href} href={fullPath} onClick={onNavigate}>
+            <span
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer select-none ${
+                isActive
+                  ? "bg-accent text-white shadow-sm font-semibold"
+                  : "text-white/90 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {Icon && (
+                <Icon
+                  className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-white/70"}`}
+                />
+              )}
+              <span className="truncate">{link.label}</span>
+              {isActive && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/80 shrink-0" />
+              )}
             </span>
           </Link>
         );
       })}
-    </>
+    </div>
   );
 
-  const BottomSection = () => (
-    <div className="pt-4 border-t border-sidebar-border mt-auto space-y-1">
+  const BottomSection = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <div className="pt-3 border-t border-white/10 mt-auto space-y-0.5">
       {displayName && (
-        <p className="text-xs text-sidebar-foreground/50 px-4 py-1 truncate">
-          Signed in as <span className="text-sidebar-foreground/80 font-medium">{displayName}</span>
-        </p>
+        <div className="px-3 py-2 mb-1">
+          <p className="text-xs text-white/50 uppercase tracking-wider font-medium mb-0.5">Signed in as</p>
+          <p className="text-sm text-white font-semibold truncate">{displayName}</p>
+        </div>
       )}
-      <Link href="/">
-        <span className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors font-medium cursor-pointer">
-          <ArrowLeft className="h-4 w-4" /> Back to Home
+      <Link href="/" onClick={onNavigate}>
+        <span className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-150 cursor-pointer">
+          <ArrowLeft className="h-4 w-4 shrink-0 text-white/60" />
+          Back to Home
         </span>
       </Link>
-      {role !== "principal" && (
+      {role !== "principal" ? (
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center gap-2 px-4 py-2.5 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors font-medium text-left"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-150"
         >
-          <LogOut className="h-4 w-4" /> Sign Out
+          <LogOut className="h-4 w-4 shrink-0 text-white/60" />
+          Sign Out
         </button>
-      )}
-      {role === "principal" && (
+      ) : (
         <button
           onClick={() => window.location.replace("/")}
-          className="w-full flex items-center gap-2 px-4 py-2.5 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors font-medium text-left"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-150"
         >
-          <LogOut className="h-4 w-4" /> Exit Portal
+          <LogOut className="h-4 w-4 shrink-0 text-white/60" />
+          Exit Portal
         </button>
       )}
     </div>
@@ -79,55 +99,100 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      {/* Mobile Header */}
-      <header className="md:hidden bg-primary text-primary-foreground p-4 flex items-center justify-between sticky top-0 z-10 border-b-4 border-accent">
+
+      {/* ── Mobile Header ────────────────────────────────── */}
+      <header className="md:hidden bg-primary text-white p-4 flex items-center justify-between sticky top-0 z-20 border-b-4 border-accent shadow-sm">
         <div className="flex items-center gap-3">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10">
-                <Menu className="h-6 w-6" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/15 rounded-lg"
+                aria-label="Open navigation menu"
+              >
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="bg-sidebar text-sidebar-foreground border-sidebar-border p-0 w-[280px]">
-              <div className="p-6 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-sidebar-border">
-                  <img src="/mpps-logo.jpg" alt="MPPS" className="w-9 h-9 rounded-full object-cover" />
-                  <div>
-                    <h2 className="font-bold tracking-tight">MPPS</h2>
-                    <p className="text-xs text-sidebar-foreground/70">{title}</p>
+            <SheetContent
+              side="left"
+              className="p-0 w-[280px] border-r-0"
+              style={{ background: "hsl(215 90% 15%)", color: "white" }}
+            >
+              <div className="flex flex-col h-full p-4">
+                {/* Drawer header */}
+                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/10">
+                  <img
+                    src="/mpps-logo.jpg"
+                    alt="MPPS"
+                    className="w-9 h-9 rounded-full object-cover border border-white/20 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <h2 className="font-bold text-white text-sm tracking-tight leading-tight">MP Public School</h2>
+                    <p className="text-xs text-accent font-semibold tracking-wide mt-0.5 truncate">{title}</p>
                   </div>
                 </div>
-                <nav className="flex-1"><NavLinks /></nav>
+
+                {/* Nav */}
+                <nav className="flex-1 overflow-y-auto">
+                  <NavLinks />
+                </nav>
+
                 <BottomSection />
               </div>
             </SheetContent>
           </Sheet>
-          <span className="font-bold text-lg">{title}</span>
+
+          <div className="flex items-center gap-2 min-w-0">
+            <img src="/mpps-logo.jpg" alt="MPPS" className="w-7 h-7 rounded-full object-cover border border-white/20 shrink-0" />
+            <span className="font-bold text-base truncate">{title}</span>
+          </div>
         </div>
+
+        {displayName && (
+          <span className="hidden sm:block text-xs text-white/70 font-medium truncate max-w-[120px]">
+            {displayName}
+          </span>
+        )}
       </header>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border sticky top-0 h-screen">
-        <div className="p-5 flex-1 flex flex-col">
-          <div className="flex items-center gap-3 mb-6 pb-5 border-b border-sidebar-border">
-            <img src="/mpps-logo.jpg" alt="MPPS" className="w-10 h-10 rounded-full object-cover border border-white/20" />
-            <div>
-              <h2 className="font-bold text-base tracking-tight">MPPS</h2>
-              <p className="text-xs font-medium text-accent tracking-wide uppercase mt-0.5">{title}</p>
+      {/* ── Desktop Sidebar ───────────────────────────────── */}
+      <aside
+        className="hidden md:flex w-64 flex-col sticky top-0 h-screen border-r border-white/5"
+        style={{ background: "hsl(215 90% 15%)", color: "white" }}
+      >
+        <div className="p-4 flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-6 pb-5 border-b border-white/10">
+            <img
+              src="/mpps-logo.jpg"
+              alt="MPPS"
+              className="w-10 h-10 rounded-full object-cover border border-white/20 shrink-0"
+            />
+            <div className="min-w-0">
+              <h2 className="font-bold text-white text-sm tracking-tight">MP Public School</h2>
+              <p className="text-xs text-accent font-semibold tracking-wide uppercase mt-0.5 truncate">{title}</p>
             </div>
           </div>
-          <nav className="flex-1"><NavLinks /></nav>
+
+          {/* Nav */}
+          <nav className="flex-1 overflow-y-auto">
+            <NavLinks />
+          </nav>
+
           <BottomSection />
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* ── Main Content ──────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="hidden md:flex bg-white border-b border-border px-6 py-4 items-center justify-between sticky top-0 z-10">
+        <header className="hidden md:flex bg-white border-b border-border px-6 py-4 items-center justify-between sticky top-0 z-10 shadow-sm">
           <h1 className="text-xl font-bold text-foreground">{title}</h1>
           <div className="text-sm font-medium text-muted-foreground">MP Public School, Mathuranagar</div>
         </header>
-        <div className="flex-1 p-4 md:p-8 overflow-auto">{children}</div>
+        <div className="flex-1 p-4 md:p-8 overflow-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
