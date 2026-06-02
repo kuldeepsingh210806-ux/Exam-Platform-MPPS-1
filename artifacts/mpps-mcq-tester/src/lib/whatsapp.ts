@@ -4,6 +4,7 @@ import { getGrade, getRemarks } from "./ranking";
 export interface WhatsAppResultData {
   studentName: string;
   rollNumber: string;
+  admissionNumber?: string;
   className: string;
   testTitle: string;
   subject: string;
@@ -13,6 +14,8 @@ export interface WhatsAppResultData {
   rank: number;
   totalStudents: number;
   submittedAt: string;
+  tabSwitches?: number;
+  integrityStatus?: string;
 }
 
 export function buildResultMessage(d: WhatsAppResultData): string {
@@ -21,11 +24,12 @@ export function buildResultMessage(d: WhatsAppResultData): string {
   const date = new Date(d.submittedAt).toLocaleDateString("en-IN", {
     day: "2-digit", month: "long", year: "numeric",
   });
-  return [
+  const lines = [
     `🏫 *MP Public School, Mathuranagar*`,
     `📝 *Result Notification*`,
     ``,
     `👤 Student: *${d.studentName}*`,
+    ...(d.admissionNumber ? [`🪪 Adm. No.: ${d.admissionNumber}`] : []),
     `📋 Roll No: ${d.rollNumber}`,
     `🎓 Class: ${d.className}`,
     ``,
@@ -38,11 +42,12 @@ export function buildResultMessage(d: WhatsAppResultData): string {
     `🏆 Rank: *${d.rank} / ${d.totalStudents}*`,
     `⭐ Grade: *${grade}*`,
     `✅ Status: *${d.percentage >= 40 ? "PASS ✅" : "FAIL ❌"}*`,
-    ``,
-    `💬 ${remark}`,
-    ``,
-    `_MP Public School Online Exam System_`,
-  ].join("\n");
+  ];
+  if (d.tabSwitches !== undefined) {
+    lines.push(`🔒 Integrity: *${d.integrityStatus ?? (d.tabSwitches === 0 ? "Clean" : "Violations: " + d.tabSwitches)}*`);
+  }
+  lines.push(``, `💬 ${remark}`, ``, `_MP Public School Online Exam System_`);
+  return lines.join("\n");
 }
 
 export function buildClassResultMessage(
@@ -77,14 +82,22 @@ export function buildClassResultMessage(
   return lines.join("\n");
 }
 
-export function shareOnWhatsApp(message: string) {
-  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+export function shareOnWhatsApp(message: string, phone?: string) {
+  const encoded = encodeURIComponent(message);
+  if (phone) {
+    const cleaned = phone.replace(/\D/g, "");
+    const intl = cleaned.length === 10 ? `91${cleaned}` : cleaned;
+    window.open(`https://wa.me/${intl}?text=${encoded}`, "_blank");
+  } else {
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+  }
 }
 
 export async function shareAndLog(
   message: string,
-  historyData: Omit<SharingHistory, "id" | "message">
+  historyData: Omit<SharingHistory, "id" | "message">,
+  phone?: string
 ) {
-  shareOnWhatsApp(message);
-  await saveSharingHistory({ ...historyData, id: generateId(), message });
+  shareOnWhatsApp(message, phone);
+  await saveSharingHistory({ ...historyData, id: generateId(), message, phone });
 }

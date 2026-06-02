@@ -4,6 +4,7 @@ import { ArrowLeft, Menu, LogOut, LucideProps } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth-context";
+import { NotificationBell } from "@/components/notification-bell";
 
 interface NavLink {
   label: string;
@@ -16,9 +17,14 @@ interface PortalLayoutProps {
   title: string;
   links: NavLink[];
   basePath: string;
+  noticeAudience?: "Students" | "Teachers" | "All";
+  noticesPath?: string;
 }
 
-export function PortalLayout({ children, title, links, basePath }: PortalLayoutProps) {
+export function PortalLayout({
+  children, title, links, basePath,
+  noticeAudience, noticesPath,
+}: PortalLayoutProps) {
   const [location] = useLocation();
   const { signOut, role, studentProfile, teacherProfile } = useAuth();
 
@@ -28,9 +34,12 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
   };
 
   const displayName =
-    role === "student" ? studentProfile?.name :
-    role === "teacher" ? teacherProfile?.name :
+    role === "student"   ? studentProfile?.name :
+    role === "teacher"   ? teacherProfile?.name :
     "Principal";
+
+  const bellAudience  = noticeAudience  ?? (role === "student" ? "Students" : role === "teacher" ? "Teachers" : "All");
+  const bellNavTarget = noticesPath ?? `${basePath}/notices`;
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <div className="space-y-0.5">
@@ -48,9 +57,7 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
               }`}
             >
               {Icon && (
-                <Icon
-                  className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-white/70"}`}
-                />
+                <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-white/70"}`} />
               )}
               <span className="truncate">{link.label}</span>
               {isActive && (
@@ -77,23 +84,13 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
           Back to Home
         </span>
       </Link>
-      {role !== "principal" ? (
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-150"
-        >
-          <LogOut className="h-4 w-4 shrink-0 text-white/60" />
-          Sign Out
-        </button>
-      ) : (
-        <button
-          onClick={() => window.location.replace("/")}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-150"
-        >
-          <LogOut className="h-4 w-4 shrink-0 text-white/60" />
-          Exit Portal
-        </button>
-      )}
+      <button
+        onClick={handleSignOut}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-150"
+      >
+        <LogOut className="h-4 w-4 shrink-0 text-white/60" />
+        {role === "principal" ? "Exit Portal" : "Sign Out"}
+      </button>
     </div>
   );
 
@@ -105,39 +102,20 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
         <div className="flex items-center gap-3">
           <Sheet>
             <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/15 rounded-lg"
-                aria-label="Open navigation menu"
-              >
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/15 rounded-lg" aria-label="Open navigation menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent
-              side="left"
-              className="p-0 w-[280px] border-r-0"
-              style={{ background: "hsl(215 90% 15%)", color: "white" }}
-            >
+            <SheetContent side="left" className="p-0 w-[280px] border-r-0" style={{ background: "hsl(215 90% 15%)", color: "white" }}>
               <div className="flex flex-col h-full p-4">
-                {/* Drawer header */}
                 <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/10">
-                  <img
-                    src="/mpps-logo.jpg"
-                    alt="MPPS"
-                    className="w-9 h-9 rounded-full object-cover border border-white/20 shrink-0"
-                  />
+                  <img src="/mpps-logo.jpg" alt="MPPS" className="w-9 h-9 rounded-full object-cover border border-white/20 shrink-0" />
                   <div className="min-w-0">
                     <h2 className="font-bold text-white text-sm tracking-tight leading-tight">MP Public School</h2>
                     <p className="text-xs text-accent font-semibold tracking-wide mt-0.5 truncate">{title}</p>
                   </div>
                 </div>
-
-                {/* Nav */}
-                <nav className="flex-1 overflow-y-auto">
-                  <NavLinks />
-                </nav>
-
+                <nav className="flex-1 overflow-y-auto"><NavLinks /></nav>
                 <BottomSection />
               </div>
             </SheetContent>
@@ -149,37 +127,27 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
           </div>
         </div>
 
-        {displayName && (
-          <span className="hidden sm:block text-xs text-white/70 font-medium truncate max-w-[120px]">
-            {displayName}
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          <NotificationBell audience={bellAudience} navigateTo={bellNavTarget} />
+          {displayName && (
+            <span className="hidden sm:block text-xs text-white/70 font-medium truncate max-w-[120px] ml-1">
+              {displayName}
+            </span>
+          )}
+        </div>
       </header>
 
       {/* ── Desktop Sidebar ───────────────────────────────── */}
-      <aside
-        className="hidden md:flex w-64 flex-col sticky top-0 h-screen border-r border-white/5"
-        style={{ background: "hsl(215 90% 15%)", color: "white" }}
-      >
+      <aside className="hidden md:flex w-64 flex-col sticky top-0 h-screen border-r border-white/5" style={{ background: "hsl(215 90% 15%)", color: "white" }}>
         <div className="p-4 flex flex-col h-full">
-          {/* Logo */}
           <div className="flex items-center gap-3 mb-6 pb-5 border-b border-white/10">
-            <img
-              src="/mpps-logo.jpg"
-              alt="MPPS"
-              className="w-10 h-10 rounded-full object-cover border border-white/20 shrink-0"
-            />
+            <img src="/mpps-logo.jpg" alt="MPPS" className="w-10 h-10 rounded-full object-cover border border-white/20 shrink-0" />
             <div className="min-w-0">
               <h2 className="font-bold text-white text-sm tracking-tight">MP Public School</h2>
               <p className="text-xs text-accent font-semibold tracking-wide uppercase mt-0.5 truncate">{title}</p>
             </div>
           </div>
-
-          {/* Nav */}
-          <nav className="flex-1 overflow-y-auto">
-            <NavLinks />
-          </nav>
-
+          <nav className="flex-1 overflow-y-auto"><NavLinks /></nav>
           <BottomSection />
         </div>
       </aside>
@@ -188,7 +156,12 @@ export function PortalLayout({ children, title, links, basePath }: PortalLayoutP
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="hidden md:flex bg-white border-b border-border px-6 py-4 items-center justify-between sticky top-0 z-10 shadow-sm">
           <h1 className="text-xl font-bold text-foreground">{title}</h1>
-          <div className="text-sm font-medium text-muted-foreground">MP Public School, Mathuranagar</div>
+          <div className="flex items-center gap-3">
+            <div className="bg-primary rounded-full p-1">
+              <NotificationBell audience={bellAudience} navigateTo={bellNavTarget} />
+            </div>
+            <div className="text-sm font-medium text-muted-foreground">MP Public School, Mathuranagar</div>
+          </div>
         </header>
         <div className="flex-1 p-4 md:p-8 overflow-auto">
           {children}

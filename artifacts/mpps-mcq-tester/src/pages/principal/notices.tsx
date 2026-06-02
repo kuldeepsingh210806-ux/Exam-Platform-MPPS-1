@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { listenNotices, saveNotice, deleteNotice, generateId, Notice } from "@/lib/firestore";
+import { listenNotices, saveNotice, updateNotice, deleteNotice, generateId, Notice } from "@/lib/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,35 +7,60 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Megaphone, PlusCircle, Trash2 } from "lucide-react";
+import { Megaphone, PlusCircle, Trash2, Edit2 } from "lucide-react";
 
 const AUDIENCES = ["All", "Students", "Teachers"];
 
 export default function PrincipalNotices() {
   const { toast } = useToast();
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [showing, setShowing] = useState(false);
+  const [notices, setNotices]   = useState<Notice[]>([]);
+  const [showing, setShowing]   = useState(false);
+  const [editNotice, setEditNotice] = useState<Notice | null>(null);
   const [deleteId, setDeleteId] = useState<string|null>(null);
-  const [form, setForm] = useState({ title:"", content:"", targetAudience:"All" });
+  const [form, setForm] = useState({ title: "", content: "", targetAudience: "All" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { const u = listenNotices(setNotices); return u; }, []);
 
-  const handleSave = async () => {
-    if (!form.title.trim() || !form.content.trim()) { toast({ title:"Title and content required.", variant:"destructive" }); return; }
+  const resetForm = () => setForm({ title: "", content: "", targetAudience: "All" });
+
+  const handleCreate = async () => {
+    if (!form.title.trim() || !form.content.trim()) {
+      toast({ title: "Title and content are required.", variant: "destructive" }); return;
+    }
     setSaving(true);
     try {
       const n: Notice = {
         id: generateId(), title: form.title.trim(), content: form.content.trim(),
         targetAudience: form.targetAudience as Notice["targetAudience"],
-        author: "Principal", createdAt: new Date().toISOString(),
+        author: "Principal", authorRole: "principal", createdAt: new Date().toISOString(),
       };
       await saveNotice(n);
-      setForm({ title:"", content:"", targetAudience:"All" });
-      setShowing(false);
+      resetForm(); setShowing(false);
       toast({ title: "Notice published!" });
+    } finally { setSaving(false); }
+  };
+
+  const openEdit = (n: Notice) => {
+    setEditNotice(n);
+    setForm({ title: n.title, content: n.content, targetAudience: n.targetAudience });
+  };
+
+  const handleEdit = async () => {
+    if (!editNotice || !form.title.trim() || !form.content.trim()) {
+      toast({ title: "Title and content are required.", variant: "destructive" }); return;
+    }
+    setSaving(true);
+    try {
+      await updateNotice(editNotice.id, {
+        title: form.title.trim(), content: form.content.trim(),
+        targetAudience: form.targetAudience as Notice["targetAudience"],
+      });
+      setEditNotice(null); resetForm();
+      toast({ title: "Notice updated." });
     } finally { setSaving(false); }
   };
 
@@ -46,41 +71,46 @@ export default function PrincipalNotices() {
     toast({ title: "Notice deleted." });
   };
 
+  const FormFields = () => (
+    <div className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label>Title</Label>
+          <Input placeholder="Notice title..." value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label>Target Audience</Label>
+          <SearchableSelect value={form.targetAudience} onValueChange={v => setForm({ ...form, targetAudience: v })} options={AUDIENCES} placeholder="Select audience" />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label>Content</Label>
+        <Textarea rows={5} placeholder="Write the announcement content..." value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} />
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Notices & Announcements</h2>
-          <p className="text-muted-foreground">Post announcements for students and teachers.</p>
+          <p className="text-muted-foreground">Post and manage announcements for students and teachers.</p>
         </div>
-        <Button onClick={() => setShowing(true)}><PlusCircle className="w-4 h-4 mr-2" />New Notice</Button>
+        <Button onClick={() => { resetForm(); setShowing(true); }}>
+          <PlusCircle className="w-4 h-4 mr-2" /> New Notice
+        </Button>
       </div>
 
+      {/* Create Form */}
       {showing && (
         <Card className="border-primary/30">
           <CardHeader><CardTitle>Create Notice</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-1"><Label>Title</Label>
-                <Input placeholder="Notice title..." value={form.title} onChange={e=>setForm({...form,title:e.target.value})} />
-              </div>
-              <div className="space-y-1"><Label>Target Audience</Label>
-                <SearchableSelect
-                  value={form.targetAudience}
-                  onValueChange={v=>setForm({...form,targetAudience:v})}
-                  options={AUDIENCES}
-                  placeholder="Select audience"
-                />
-              </div>
-            </div>
-            <div className="space-y-1"><Label>Content</Label>
-              <Textarea rows={5} placeholder="Write the announcement content..." value={form.content} onChange={e=>setForm({...form,content:e.target.value})} />
-            </div>
+            <FormFields />
             <div className="flex gap-3">
-              <Button variant="outline" onClick={()=>setShowing(false)}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? "Publishing..." : "Publish Notice"}
-              </Button>
+              <Button variant="outline" onClick={() => setShowing(false)}>Cancel</Button>
+              <Button onClick={handleCreate} disabled={saving}>{saving ? "Publishing..." : "Publish Notice"}</Button>
             </div>
           </CardContent>
         </Card>
@@ -110,10 +140,14 @@ export default function PrincipalNotices() {
                       {new Date(n.createdAt).toLocaleString("en-IN")} · {n.author}
                     </p>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive flex-shrink-0"
-                    onClick={() => setDeleteId(n.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" title="Edit" onClick={() => openEdit(n)}>
+                      <Edit2 className="w-4 h-4 text-primary" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" title="Delete" onClick={() => setDeleteId(n.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -121,7 +155,20 @@ export default function PrincipalNotices() {
         </div>
       )}
 
-      <AlertDialog open={!!deleteId} onOpenChange={o=>!o&&setDeleteId(null)}>
+      {/* Edit Dialog */}
+      <Dialog open={!!editNotice} onOpenChange={o => !o && setEditNotice(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Edit Notice</DialogTitle></DialogHeader>
+          <FormFields />
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setEditNotice(null)}>Cancel</Button>
+            <Button onClick={handleEdit} disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <AlertDialog open={!!deleteId} onOpenChange={o => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Notice?</AlertDialogTitle>

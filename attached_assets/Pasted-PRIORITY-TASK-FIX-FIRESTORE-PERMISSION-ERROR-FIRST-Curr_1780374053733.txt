@@ -1,0 +1,284 @@
+PRIORITY TASK: FIX FIRESTORE PERMISSION ERROR FIRST
+
+Current Error:
+[plugin:runtime-error-plugin] Missing or insufficient permissions
+
+Location:
+Principal Portal → All Results Page
+
+Current Firestore Rules:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+
+====================================
+PHASE 1 - FIRESTORE PERMISSION FIX
+====================================
+
+Before implementing any new feature:
+
+1. Identify the exact Firestore query causing the permission error.
+
+2. Add detailed logging around:
+   - Principal Dashboard
+   - All Results Page
+   - Firestore reads
+   - Firestore writes
+
+3. Verify:
+   - Firebase Authentication initialization
+   - Auth state persistence
+   - Firebase project configuration
+   - API keys
+   - Collection names
+   - Collection paths
+   - Document paths
+
+4. Ensure:
+   - Firestore queries run only after authentication is ready.
+   - All listeners wait for auth initialization.
+   - Principal users are properly authenticated using Firebase Auth.
+
+5. Add:
+   - Graceful error handling
+   - User-friendly error messages
+   - Loading states
+   - Retry mechanism
+
+6. Do NOT weaken Firestore security rules.
+
+Provide:
+- Exact failing query
+- Root cause
+- Files modified
+- Verification steps
+
+Only after the permission issue is fully resolved proceed to the next phases.
+
+====================================
+PHASE 2 - ADMISSION NUMBER SYSTEM
+====================================
+
+Student Registration Form:
+
+Add:
+- Admission Number (Adm. No.)
+
+Requirements:
+- Mandatory field
+- Unique value
+- Duplicate prevention
+
+Display Admission Number in:
+- Student Profile
+- Teacher Dashboard
+- Principal Dashboard
+- Student Lists
+- Result Pages
+- PDF Exports
+
+====================================
+PHASE 3 - NOTICE & NOTIFICATION SYSTEM
+====================================
+
+Principal Notice System:
+
+Principal can:
+- Create Notice
+- Edit Notice
+- Delete Notice
+- Publish Notice
+
+Student Portal:
+- Notification bell
+- Red notification dot
+- Unread count
+- Popup notification
+- Notice history
+- Mark as read
+
+Teacher Portal:
+- Receive principal notices
+- Notification history
+
+====================================
+PHASE 4 - TEACHER NOTICE SYSTEM
+====================================
+
+Eligible Teachers can:
+
+- Create Notice
+- Edit Notice
+- Delete Notice
+
+Target Audience:
+- Specific Class
+- Multiple Classes
+- Entire School (if permitted)
+
+Students should receive:
+- Notification badge
+- Notification alert
+- Notice history
+
+====================================
+PHASE 5 - ANTI-CHEATING DISPLAY
+====================================
+
+Display anti-cheating data everywhere.
+
+Result Page:
+- Tab Switch Count
+- Integrity Status
+
+PDF Export:
+- Tab Switch Count
+- Integrity Status
+- Violation Summary
+
+Teacher Reports:
+- Tab-switch analytics
+
+Principal Reports:
+- Tab-switch analytics
+
+====================================
+PHASE 6 - WHATSAPP RESULT SHARING
+====================================
+
+Replace Class WhatsApp Sharing with:
+
+Bulk Individual Result Sharing
+
+Requirements:
+
+- One button click by Teacher/Principal.
+- Generate personalized result messages.
+- Use registered student mobile numbers.
+- Record sharing history.
+
+If WhatsApp Business API is configured:
+- Support automated delivery.
+
+If API is not configured:
+- Provide one-click WhatsApp sharing workflow.
+- Show delivery status.
+
+Store:
+- Shared By
+- Shared To
+- Date & Time
+- Delivery Status
+
+====================================
+PHASE 7 - PRINCIPAL TEST MANAGEMENT
+====================================
+
+Principal Portal must contain all Teacher test features.
+
+Add:
+
+- Create Test
+- Edit Test
+- Delete Test
+- Publish Test
+- Manage Tests
+- View Test Statistics
+- Export Test Results PDF
+- Share Results via WhatsApp
+
+Principal should be able to manage all tests across the school.
+
+====================================
+PHASE 8 - RESULT SYSTEM IMPROVEMENTS
+====================================
+
+Every Result Page should display:
+
+- Student Name
+- Admission Number
+- Class
+- Subject
+- Marks Obtained
+- Total Marks
+- Percentage
+- Rank
+- Test Date
+- Tab Switch Count
+- Integrity Status
+
+Every PDF Result should display:
+
+- School Name
+- Student Details
+- Admission Number
+- Result Summary
+- Percentage
+- Rank
+- Tab Switch Count
+- Integrity Status
+- Teacher Remarks
+- Generated Date & Time
+
+====================================
+PHASE 9 - REAL-TIME NOTIFICATION CENTER
+====================================
+
+Create a centralized notification system.
+
+Notification Sources:
+- New Tests
+- New Notices
+- Published Results
+- Important Announcements
+
+Student Dashboard:
+- Notification Bell
+- Red Dot for Unread Notifications
+- Notification History
+
+Teacher Dashboard:
+- Notification Bell
+- Notice Updates
+- Result Updates
+
+Principal Dashboard:
+- Activity Notifications
+- System Alerts
+- School Activity Feed
+
+====================================
+IMPLEMENTATION RULES
+====================================
+
+- Create backup before modifications.
+- Preserve all existing functionality.
+- Do not break routes.
+- Maintain mobile responsiveness.
+- Use Firestore real-time listeners where appropriate.
+- Avoid duplicate records.
+- Add proper loading states.
+- Add proper error handling.
+- Optimize Firestore queries.
+
+====================================
+FINAL REPORT
+====================================
+
+Provide:
+
+- Root cause of Firestore permission issue
+- Exact query that failed
+- Files modified
+- New Firestore collections added
+- Features implemented
+- Bugs fixed
+- Security improvements
+- Testing checklist
+- Remaining recommendations

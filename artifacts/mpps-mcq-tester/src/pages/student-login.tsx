@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
-import { saveStudentProfile, getStudentProfile } from "@/lib/firestore";
+import { saveStudentProfile, getStudentProfile, getAllStudents } from "@/lib/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,8 @@ export default function StudentLogin() {
 
   const [loginForm, setLoginForm] = useState({ mobile: "", password: "" });
   const [regForm, setRegForm] = useState({
-    name: "", class: "", section: "", rollNumber: "", mobile: "", password: "", confirm: "",
+    name: "", admissionNumber: "", class: "", section: "",
+    rollNumber: "", mobile: "", password: "", confirm: "",
   });
 
   const mobileToEmail = (mobile: string) => `${mobile.trim()}@mpps.edu`;
@@ -54,9 +55,9 @@ export default function StudentLogin() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { name, class: cls, section, rollNumber, mobile, password, confirm } = regForm;
-    if (!name || !cls || !section || !rollNumber || !mobile || !password) {
-      toast({ title: "Fill all fields", variant: "destructive" }); return;
+    const { name, admissionNumber, class: cls, section, rollNumber, mobile, password, confirm } = regForm;
+    if (!name || !admissionNumber || !cls || !section || !rollNumber || !mobile || !password) {
+      toast({ title: "All fields are required", variant: "destructive" }); return;
     }
     if (password !== confirm) {
       toast({ title: "Passwords do not match", variant: "destructive" }); return;
@@ -66,10 +67,22 @@ export default function StudentLogin() {
     }
     setLoading(true);
     try {
+      // Check for duplicate admission number
+      const existing = await getAllStudents();
+      const dupAdm = existing.find(s => s.admissionNumber?.trim() === admissionNumber.trim());
+      if (dupAdm) {
+        toast({ title: "Admission number already registered", description: "This admission number is already in use.", variant: "destructive" });
+        setLoading(false); return;
+      }
+      const dupRoll = existing.find(s => s.rollNumber === rollNumber && s.class === cls && s.section === section);
+      if (dupRoll) {
+        toast({ title: "Roll number already registered", description: `Roll ${rollNumber} in ${cls}-${section} is already taken.`, variant: "destructive" });
+        setLoading(false); return;
+      }
       const user = await signUp(mobileToEmail(mobile), password);
       await saveStudentProfile(user.uid, {
-        name, class: cls, section, rollNumber, mobile,
-        createdAt: new Date().toISOString(),
+        name, admissionNumber: admissionNumber.trim(), class: cls, section,
+        rollNumber, mobile, createdAt: new Date().toISOString(),
       });
       setRole("student");
       await refreshProfile();
@@ -108,6 +121,8 @@ export default function StudentLogin() {
                 <TabsTrigger value="login" className="flex-1">Login</TabsTrigger>
                 <TabsTrigger value="register" className="flex-1">Register</TabsTrigger>
               </TabsList>
+
+              {/* ── Login Tab ── */}
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-1">
@@ -121,20 +136,28 @@ export default function StudentLogin() {
                       onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Login
+                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Login
                   </Button>
                 </form>
               </TabsContent>
+
+              {/* ── Register Tab ── */}
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-3">
                   <div className="space-y-1">
-                    <Label>Full Name</Label>
+                    <Label>Full Name <span className="text-red-500">*</span></Label>
                     <Input placeholder="Your full name" value={regForm.name}
                       onChange={(e) => setRegForm({ ...regForm, name: e.target.value })} />
                   </div>
+                  <div className="space-y-1">
+                    <Label>Admission Number <span className="text-red-500">*</span></Label>
+                    <Input placeholder="e.g. 2024001 (unique, assigned by school)" value={regForm.admissionNumber}
+                      onChange={(e) => setRegForm({ ...regForm, admissionNumber: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">This must be unique — contact school if unsure.</p>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label>Class</Label>
+                      <Label>Class <span className="text-red-500">*</span></Label>
                       <SearchableSelect
                         value={regForm.class}
                         onValueChange={(v) => setRegForm({ ...regForm, class: v })}
@@ -143,7 +166,7 @@ export default function StudentLogin() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label>Section</Label>
+                      <Label>Section <span className="text-red-500">*</span></Label>
                       <SearchableSelect
                         value={regForm.section}
                         onValueChange={(v) => setRegForm({ ...regForm, section: v })}
@@ -153,27 +176,27 @@ export default function StudentLogin() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>Roll Number</Label>
-                    <Input placeholder="e.g. 2024001" value={regForm.rollNumber}
+                    <Label>Roll Number <span className="text-red-500">*</span></Label>
+                    <Input placeholder="Your class roll number" value={regForm.rollNumber}
                       onChange={(e) => setRegForm({ ...regForm, rollNumber: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label>Mobile Number</Label>
+                    <Label>Mobile Number <span className="text-red-500">*</span></Label>
                     <Input placeholder="10-digit mobile number" value={regForm.mobile}
                       onChange={(e) => setRegForm({ ...regForm, mobile: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label>Password</Label>
+                    <Label>Password <span className="text-red-500">*</span></Label>
                     <Input type="password" placeholder="Min 6 characters" value={regForm.password}
                       onChange={(e) => setRegForm({ ...regForm, password: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label>Confirm Password</Label>
+                    <Label>Confirm Password <span className="text-red-500">*</span></Label>
                     <Input type="password" placeholder="Re-enter password" value={regForm.confirm}
                       onChange={(e) => setRegForm({ ...regForm, confirm: e.target.value })} />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Register
+                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Register
                   </Button>
                 </form>
               </TabsContent>

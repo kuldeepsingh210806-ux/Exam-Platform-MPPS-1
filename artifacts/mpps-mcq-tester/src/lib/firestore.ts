@@ -40,6 +40,7 @@ export type Test = {
   id: string;
   title: string;
   subject: string;
+  class: string;
   targetClass: string;
   duration: number;
   totalMarks: number;
@@ -49,6 +50,7 @@ export type Test = {
   createdBy: string;
   questions: MCQQuestion[];
   published: boolean;
+  isActive?: boolean;
 };
 
 export type Attempt = {
@@ -72,7 +74,10 @@ export type Notice = {
   title: string;
   content: string;
   targetAudience: "All" | "Students" | "Teachers";
+  targetClasses?: string[];
   author: string;
+  authorRole?: "principal" | "teacher";
+  teacherId?: string;
   createdAt: string;
 };
 
@@ -97,6 +102,7 @@ export type SharingHistory = {
   sharedBy: string;
   sharedAt: string;
   message: string;
+  phone?: string;
 };
 
 export const SUBJECTS = [
@@ -277,8 +283,8 @@ export async function saveNotice(notice: Notice) {
 export async function addNotice(notice: Notice) {
   await setDoc(doc(db, "notices", notice.id), notice);
 }
-export async function updateNotice(notice: Notice) {
-  await setDoc(doc(db, "notices", notice.id), notice, { merge: true });
+export async function updateNotice(noticeId: string, data: Partial<Notice>) {
+  await updateDoc(doc(db, "notices", noticeId), data as Record<string, unknown>);
 }
 export async function deleteNotice(id: string) {
   await deleteDoc(doc(db, "notices", id));
@@ -303,4 +309,17 @@ export async function getSharingHistory(): Promise<SharingHistory[]> {
 // ── ID helper ─────────────────────────────────────────────────────────────────
 export function generateId(): string {
   return Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+}
+
+// ── Notice read tracking (localStorage-based, per-device) ─────────────────────
+export function getLastSeenNotices(uid: string): number {
+  const val = localStorage.getItem(`mpps_notices_seen_${uid}`);
+  return val ? parseInt(val, 10) : 0;
+}
+export function markNoticesSeen(uid: string) {
+  localStorage.setItem(`mpps_notices_seen_${uid}`, Date.now().toString());
+}
+export function countUnreadNotices(notices: Notice[], uid: string): number {
+  const lastSeen = getLastSeenNotices(uid);
+  return notices.filter(n => new Date(n.createdAt).getTime() > lastSeen).length;
 }

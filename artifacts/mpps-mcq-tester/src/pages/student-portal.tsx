@@ -31,15 +31,15 @@ export default function StudentPortal() {
   }
 
   return (
-    <PortalLayout title="Student Portal" links={links} basePath="/student">
+    <PortalLayout title="Student Portal" links={links} basePath="/student" noticeAudience="Students">
       <Switch>
-        <Route path="/student"              component={StudentDashboard} />
-        <Route path="/student/live"         component={LiveTests} />
-        <Route path="/student/upcoming"     component={UpcomingTests} />
-        <Route path="/student/previous"     component={PreviousTests} />
-        <Route path="/student/results"      component={StudentResults} />
-        <Route path="/student/review/:testId" component={ReviewAnswers} />
-        <Route path="/student/notices"      component={StudentNotices} />
+        <Route path="/student"                 component={StudentDashboard} />
+        <Route path="/student/live"            component={LiveTests}        />
+        <Route path="/student/upcoming"        component={UpcomingTests}    />
+        <Route path="/student/previous"        component={PreviousTests}    />
+        <Route path="/student/results"         component={StudentResults}   />
+        <Route path="/student/review/:testId"  component={ReviewAnswers}    />
+        <Route path="/student/notices"         component={StudentNotices}   />
         <Route><div className="p-8 text-center text-muted-foreground">Page not found</div></Route>
       </Switch>
     </PortalLayout>
