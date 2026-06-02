@@ -9,8 +9,10 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { MessageCircle, Users, History } from "lucide-react";
+import { MessageCircle, Users, History, CheckCircle2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSharingHistory, SharingHistory } from "@/lib/firestore";
 
@@ -22,6 +24,8 @@ export default function AllResults() {
   const [filterClass, setFilterClass] = useState("all");
   const [filterTest,  setFilterTest]  = useState("all");
   const [sharingHistory, setSharingHistory] = useState<SharingHistory[]>([]);
+  const [bulkDialog,  setBulkDialog]  = useState(false);
+  const [bulkSentIds, setBulkSentIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const u1 = listenTests(setTests);
@@ -99,6 +103,22 @@ export default function AllResults() {
     toast({ title: "WhatsApp opened!", description: `Result for ${r.student!.name}` });
   };
 
+  const bulkTest      = filterTest !== "all" ? tests.find(t => t.id === filterTest) : null;
+  const bulkSentCount = rows.filter(r => bulkSentIds.has(r.a.id)).length;
+  const bulkProgress  = rows.length > 0 ? (bulkSentCount / rows.length) * 100 : 0;
+  const nextBulkRow   = rows.find(r => !bulkSentIds.has(r.a.id));
+
+  const sendBulkNext = () => {
+    if (!nextBulkRow) return;
+    shareIndividual(nextBulkRow);
+    setBulkSentIds(prev => new Set([...prev, nextBulkRow.a.id]));
+  };
+
+  const sendBulkOne = (r: typeof rows[0]) => {
+    shareIndividual(r);
+    setBulkSentIds(prev => new Set([...prev, r.a.id]));
+  };
+
   const shareClass = async () => {
     if (filterTest === "all" || filterClass === "all") {
       toast({ title: "Select a specific class AND test to share.", variant: "destructive" }); return;
@@ -130,10 +150,25 @@ export default function AllResults() {
           <h2 className="text-2xl font-bold tracking-tight">All Results</h2>
           <p className="text-muted-foreground">Complete result view across all classes and tests.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={shareClass} className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50">
-          <MessageCircle className="w-4 h-4" />
-          <Users className="w-3.5 h-3.5" /> Class WhatsApp
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline" size="sm" onClick={shareClass}
+            className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <Users className="w-3.5 h-3.5" /> Class Summary
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => { setBulkSentIds(new Set()); setBulkDialog(true); }}
+            disabled={filterTest === "all"}
+            title={filterTest === "all" ? "Select a specific test to enable bulk sending" : `Send to all ${rows.length} student(s)`}
+            className="gap-1.5 bg-green-700 hover:bg-green-800 text-white disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+            Bulk WhatsApp {filterTest !== "all" ? `(${rows.length})` : ""}
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="results">
@@ -281,6 +316,139 @@ export default function AllResults() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* ── Bulk WhatsApp Dialog ── */}
+      <Dialog open={bulkDialog} onOpenChange={(o) => { if (!o) setBulkSentIds(new Set()); setBulkDialog(o); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-green-600" />
+              Bulk WhatsApp — {bulkTest?.title ?? ""}
+            </DialogTitle>
+            <DialogDescription>
+              Click <strong>Send Next →</strong> to open WhatsApp for each student one by one.
+              Each click requires your approval in WhatsApp before proceeding to the next.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Progress */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  <strong>{bulkSentCount}</strong> of <strong>{rows.length}</strong> sent
+                </span>
+                {rows.length > 0 && bulkSentCount === rows.length && (
+                  <span className="text-green-600 font-semibold">All done! 🎉</span>
+                )}
+              </div>
+              <Progress value={bulkProgress} className="h-2" />
+            </div>
+
+            {/* Next in queue */}
+            {nextBulkRow ? (
+              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Next up:</span>{" "}
+                    <strong>{nextBulkRow.student!.name}</strong>{" "}
+                    <span className="text-muted-foreground">
+                      ({nextBulkRow.student!.class} {nextBulkRow.student!.section})
+                      — {nextBulkRow.a.score}/{nextBulkRow.a.totalMarks} ({(nextBulkRow.a.percentage ?? 0).toFixed(1)}%)
+                    </span>
+                  </p>
+                </div>
+                <Button onClick={sendBulkNext} className="bg-green-700 hover:bg-green-800 shrink-0 gap-1.5">
+                  <MessageCircle className="w-4 h-4" /> Send Next →
+                </Button>
+              </div>
+            ) : (
+              rows.length > 0 && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium">
+                  <CheckCircle2 className="w-4 h-4" /> All {rows.length} results have been shared on WhatsApp!
+                </div>
+              )
+            )}
+
+            {/* Student list */}
+            {rows.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6 text-sm">
+                No students match the current filters.
+              </p>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="max-h-72 overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Class</TableHead>
+                        <TableHead className="text-right">Score</TableHead>
+                        <TableHead className="text-center">Grade</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="w-10"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map(r => {
+                        const isSent = bulkSentIds.has(r.a.id);
+                        const pct = r.a.percentage ?? 0;
+                        const { grade, color } = getGrade(pct);
+                        return (
+                          <TableRow key={r.a.id} className={isSent ? "bg-green-50/60" : ""}>
+                            <TableCell className={`font-medium ${isSent ? "text-muted-foreground" : ""}`}>
+                              {r.student!.name}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {r.student!.class} {r.student!.section}
+                            </TableCell>
+                            <TableCell className="text-right text-sm">
+                              {r.a.score}/{r.a.totalMarks}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded ${color}`}>{grade}</span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {isSent ? (
+                                <span className="inline-flex items-center gap-1 text-green-600 text-xs font-semibold">
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Sent
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Pending</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {!isSent && (
+                                <Button
+                                  size="icon" variant="ghost"
+                                  className="h-7 w-7 text-green-700 hover:text-green-800 hover:bg-green-50"
+                                  onClick={() => sendBulkOne(r)}
+                                  title={`Send to ${r.student!.name}`}
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setBulkSentIds(new Set())}>
+              Reset Progress
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { setBulkDialog(false); setBulkSentIds(new Set()); }}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
