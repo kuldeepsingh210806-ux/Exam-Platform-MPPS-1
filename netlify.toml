@@ -1,7 +1,12 @@
 [build]
-  command = "pnpm run build"
+  command = "pnpm --filter @workspace/mpps-mcq-tester run build"
   publish = "artifacts/mpps-mcq-tester/dist"
 
 [build.environment]
-  PNPM_VERSION = "8"
-  NODE_VERSION = "20.19.0"
+  PNPM_VERSION = "10"
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
