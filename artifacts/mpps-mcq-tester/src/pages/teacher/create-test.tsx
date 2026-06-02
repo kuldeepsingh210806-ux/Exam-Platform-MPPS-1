@@ -71,12 +71,19 @@ export default function CreateTest() {
     setLoading(true);
     try {
       const test: Test = {
-        id: generateId(), title: info.title, subject: info.subject, targetClass: info.targetClass,
-        duration: info.duration, totalMarks,
+        id: generateId(),
+        title: info.title,
+        subject: info.subject,
+        "class": info.targetClass,
+        targetClass: info.targetClass,
+        duration: info.duration,
+        totalMarks,
         scheduledAt: new Date(info.scheduledAt).toISOString(),
         endsAt: new Date(info.endsAt).toISOString(),
-        createdAt: new Date().toISOString(), createdBy: user?.uid ?? "",
-        questions, published,
+        createdAt: new Date().toISOString(),
+        createdBy: user?.uid ?? "",
+        questions,
+        published,
       };
       await saveTest(test);
       toast({ title: published ? "Test published!" : "Test saved as draft.", description: test.title });

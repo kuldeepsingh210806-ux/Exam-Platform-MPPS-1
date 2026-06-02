@@ -1,0 +1,7 @@
+[build]
+  command = "pnpm run build"
+  publish = "artifacts/mpps-mcq-tester/dist"
+
+[build.environment]
+  PNPM_VERSION = "8"
+  NODE_VERSION = "20.19.0"
