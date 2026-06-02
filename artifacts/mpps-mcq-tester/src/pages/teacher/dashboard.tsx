@@ -1,21 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { listenTests, listenStudents, listenAttempts, Test, StudentProfile, Attempt } from "@/lib/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, ClipboardList, BarChart2, PlusCircle, Activity } from "lucide-react";
+import { Users, ClipboardList, BarChart2, PlusCircle, Activity, RefreshCw } from "lucide-react";
 
 export default function TeacherDashboard() {
   const { teacherProfile } = useAuth();
   const [tests, setTests] = useState<Test[]>([]);
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { const u = listenTests(setTests); return u; }, []);
   useEffect(() => { const u = listenStudents(setStudents); return u; }, []);
   useEffect(() => { const u = listenAttempts(setAttempts); return u; }, []);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
   const recent = attempts
     .filter((a) => a.submitted)
@@ -24,9 +30,15 @@ export default function TeacherDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Teacher Dashboard</h2>
-        <p className="text-muted-foreground">Welcome, {teacherProfile?.name} ({teacherProfile?.subject})</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Teacher Dashboard</h2>
+          <p className="text-muted-foreground">Welcome, {teacherProfile?.name} ({teacherProfile?.subject})</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+          <RefreshCw className={`w-4 h-4 mr-1.5 ${refreshing ? "animate-spin" : ""}`} />
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </Button>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[

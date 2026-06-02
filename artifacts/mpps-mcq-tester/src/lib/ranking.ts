@@ -16,6 +16,14 @@ export function getRemarks(p: number): string {
   return "Needs Improvement";
 }
 
+export function getMotivationalFeedback(p: number): string {
+  if (p >= 90) return "🏆 Outstanding performance! Keep aiming higher and continue your excellent work.";
+  if (p >= 75) return "🌟 Great job! You are performing very well. A little more effort can take you to the top.";
+  if (p >= 60) return "📈 Nice progress! Keep practicing consistently and your scores will improve further.";
+  if (p >= 40) return "💪 You can do better. Focus on your weak areas and keep learning every day.";
+  return "🚀 Don't give up. Every topper starts with improvement. Review your mistakes and try again with confidence.";
+}
+
 // Competition ranking: 100,100,98 → 1,1,3
 export function computeTestRanks(attempts: Attempt[]): Map<string, number> {
   const submitted = attempts.filter((a) => a.submitted);

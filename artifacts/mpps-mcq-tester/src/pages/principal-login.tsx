@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Lock, Loader2 } from "lucide-react";
+import { friendlyAuthError } from "@/lib/auth-error";
 
 const PRINCIPAL_PASSKEY   = "MPPS05";
 const PRINCIPAL_EMAIL     = "principal@mpps-admin.edu";
@@ -49,7 +50,7 @@ export default function PrincipalLogin() {
       console.error("Principal login error:", err);
       toast({
         title: "Login failed",
-        description: err.message ?? "Could not authenticate. Please try again.",
+        description: friendlyAuthError(err),
         variant: "destructive",
       });
     } finally {

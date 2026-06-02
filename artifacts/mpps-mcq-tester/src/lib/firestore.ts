@@ -230,6 +230,12 @@ export async function getAttemptsByStudent(studentId: string): Promise<Attempt[]
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as Attempt);
 }
+export function listenAttemptsByStudent(studentId: string, cb: (attempts: Attempt[]) => void) {
+  const q = query(collection(db, "studentAttempts"), where("studentId", "==", studentId));
+  return onSnapshot(q, (snap) => {
+    cb(snap.docs.map((d) => d.data() as Attempt));
+  });
+}
 export async function getAttemptsByTest(testId: string): Promise<Attempt[]> {
   const q = query(
     collection(db, "studentAttempts"),

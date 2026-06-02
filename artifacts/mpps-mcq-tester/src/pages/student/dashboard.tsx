@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
-import { listenTestsByClass, getAttemptsByStudent, Test, Attempt } from "@/lib/firestore";
+import { listenTestsByClass, listenAttemptsByStudent, Test, Attempt } from "@/lib/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, Calendar, CheckCircle2, Target } from "lucide-react";
+import { Activity, Calendar, CheckCircle2, Target, RefreshCw } from "lucide-react";
 
 export default function StudentDashboard() {
   const [, navigate] = useLocation();
   const { studentProfile, user } = useAuth();
   const [tests, setTests] = useState<Test[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!studentProfile) return;
@@ -20,8 +21,14 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    getAttemptsByStudent(user.uid).then(setAttempts);
+    const unsub = listenAttemptsByStudent(user.uid, setAttempts);
+    return unsub;
   }, [user]);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
   const now = new Date();
   const live = tests.filter((t) => new Date(t.scheduledAt) <= now && new Date(t.endsAt) >= now);
@@ -32,11 +39,17 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Logged in as <strong>{studentProfile?.name}</strong>, {studentProfile?.class} {studentProfile?.section}
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">
+            Logged in as <strong>{studentProfile?.name}</strong>, {studentProfile?.class} {studentProfile?.section}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+          <RefreshCw className={`w-4 h-4 mr-1.5 ${refreshing ? "animate-spin" : ""}`} />
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </Button>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Lock, Loader2 } from "lucide-react";
+import { friendlyAuthError } from "@/lib/auth-error";
 
 const SUBJECTS = [
   "Mathematics","Physics","Chemistry","Biology","English","Hindi",
@@ -56,7 +57,7 @@ export default function TeacherLogin() {
       await refreshProfile();
       navigate("/teacher");
     } catch (err: any) {
-      toast({ title: "Login failed", description: err.message, variant: "destructive" });
+      toast({ title: "Login failed", description: friendlyAuthError(err), variant: "destructive" });
     } finally { setLoading(false); }
   };
 
@@ -79,7 +80,7 @@ export default function TeacherLogin() {
       await refreshProfile();
       navigate("/teacher");
     } catch (err: any) {
-      toast({ title: "Registration failed", description: err.message, variant: "destructive" });
+      toast({ title: "Registration failed", description: friendlyAuthError(err), variant: "destructive" });
     } finally { setLoading(false); }
   };
 

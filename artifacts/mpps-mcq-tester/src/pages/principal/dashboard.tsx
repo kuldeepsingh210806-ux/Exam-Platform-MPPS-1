@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { listenTests, listenStudents, listenAttempts, listenViolations, Test, StudentProfile, Attempt, Violation } from "@/lib/firestore";
 import { getGrade } from "@/lib/ranking";
+import { printPrincipalReport } from "@/lib/pdf-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Users, ClipboardList, CheckCircle, ShieldAlert, TrendingUp, BookOpen } from "lucide-react";
+import { Users, ClipboardList, CheckCircle, ShieldAlert, TrendingUp, BookOpen, RefreshCw, FileDown } from "lucide-react";
 
 export default function PrincipalDashboard() {
   const [tests,      setTests]      = useState<Test[]>([]);
@@ -13,6 +15,16 @@ export default function PrincipalDashboard() {
   const [attempts,   setAttempts]   = useState<Attempt[]>([]);
   const [violations, setViolations] = useState<Violation[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date|null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
+  const handleExportPDF = useCallback(() => {
+    printPrincipalReport(tests, students, attempts, violations);
+  }, [tests, students, attempts, violations]);
 
   useEffect(() => {
     const u1 = listenTests(t  => { setTests(t);      setLastUpdated(new Date()); });
@@ -77,9 +89,16 @@ export default function PrincipalDashboard() {
           <h2 className="text-2xl font-bold tracking-tight">Principal Dashboard</h2>
           <p className="text-muted-foreground">School-wide overview — MP Public School, Mathuranagar</p>
         </div>
-        <div className="flex items-center gap-2">
-          {lastUpdated && <span className="text-xs text-muted-foreground">Updated {lastUpdated.toLocaleTimeString("en-IN")}</span>}
+        <div className="flex items-center gap-2 flex-wrap">
+          {lastUpdated && <span className="text-xs text-muted-foreground hidden sm:block">Updated {lastUpdated.toLocaleTimeString("en-IN")}</span>}
           <Badge variant="outline" className="text-xs">Live</Badge>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={`w-4 h-4 mr-1.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+          <Button size="sm" onClick={handleExportPDF} className="gap-1.5">
+            <FileDown className="w-4 h-4" /> Export PDF
+          </Button>
         </div>
       </div>
 

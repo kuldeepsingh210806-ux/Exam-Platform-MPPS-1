@@ -1,5 +1,5 @@
 import { SharingHistory, generateId, saveSharingHistory } from "./firestore";
-import { getGrade, getRemarks } from "./ranking";
+import { getGrade, getRemarks, getMotivationalFeedback } from "./ranking";
 
 export interface WhatsAppResultData {
   studentName: string;
@@ -46,7 +46,8 @@ export function buildResultMessage(d: WhatsAppResultData): string {
   if (d.tabSwitches !== undefined) {
     lines.push(`🔒 Integrity: *${d.integrityStatus ?? (d.tabSwitches === 0 ? "Clean" : "Violations: " + d.tabSwitches)}*`);
   }
-  lines.push(``, `💬 ${remark}`, ``, `_MP Public School Online Exam System_`);
+  const feedback = getMotivationalFeedback(d.percentage);
+  lines.push(``, `💬 ${remark}`, ``, `✨ ${feedback}`, ``, `_MP Public School Online Exam System_`);
   return lines.join("\n");
 }
 

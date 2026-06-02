@@ -2,17 +2,18 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { getAttemptsByStudent, getAllTests, getAllAttempts, getAllViolations, Attempt, Test, Violation } from "@/lib/firestore";
-import { computeTestRanks, computeOverallRank, getGrade } from "@/lib/ranking";
+import { computeTestRanks, computeOverallRank, getGrade, getMotivationalFeedback } from "@/lib/ranking";
+import { printStudentResultPDF } from "@/lib/pdf-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Target, ClipboardList, RefreshCw, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Trophy, Target, ClipboardList, RefreshCw, ShieldCheck, ShieldAlert, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function StudentResults() {
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, studentProfile } = useAuth();
   const { toast } = useToast();
   const [rows, setRows]         = useState<{ attempt: Attempt; test: Test; rank: number; totalInTest: number }[]>([]);
   const [violations, setViolations] = useState<Violation[]>([]);
@@ -64,6 +65,27 @@ export default function StudentResults() {
   const totalViolations = violations.reduce((s, v) => s + v.count, 0);
   const integrityClean  = totalViolations === 0;
 
+  const handleDownloadPDF = (r: { attempt: Attempt; test: Test; rank: number; totalInTest: number }) => {
+    if (!studentProfile) return;
+    const viol = violations.find(v => v.testId === r.test.id);
+    printStudentResultPDF({
+      studentName:    studentProfile.name,
+      admissionNumber: studentProfile.admissionNumber,
+      rollNumber:     studentProfile.rollNumber,
+      className:      `${studentProfile.class} ${studentProfile.section}`,
+      testTitle:      r.test.title,
+      subject:        r.test.subject,
+      score:          r.attempt.score ?? 0,
+      totalMarks:     r.attempt.totalMarks ?? 0,
+      percentage:     r.attempt.percentage ?? 0,
+      rank:           r.rank,
+      totalInTest:    r.totalInTest,
+      timeTaken:      r.attempt.timeTaken ?? 0,
+      tabSwitches:    viol?.count ?? 0,
+      submittedAt:    r.attempt.submittedAt!,
+    });
+  };
+
   if (loading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading results...</div>;
 
   return (
@@ -104,6 +126,15 @@ export default function StudentResults() {
         ))}
       </div>
 
+      {/* Motivational Feedback */}
+      {rows.length > 0 && (
+        <Card className="border-l-4 border-l-primary bg-primary/5">
+          <CardContent className="pt-4">
+            <p className="text-sm font-medium">{getMotivationalFeedback(avg)}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Integrity Card */}
       <Card className={`border-l-4 ${integrityClean ? "border-l-green-500" : "border-l-yellow-400"}`}>
         <CardContent className="pt-4 flex items-center gap-3">
@@ -143,7 +174,7 @@ export default function StudentResults() {
                   <TableHead className="text-center">Grade</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Integrity</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -179,9 +210,14 @@ export default function StudentResults() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/student/review/${test.id}`)}>
-                          Review
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" variant="outline" onClick={() => navigate(`/student/review/${test.id}`)}>
+                            Review
+                          </Button>
+                          <Button size="sm" variant="ghost" title="Download PDF" onClick={() => handleDownloadPDF({ attempt, test, rank, totalInTest })}>
+                            <FileDown className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

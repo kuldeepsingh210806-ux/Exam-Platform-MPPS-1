@@ -1,0 +1,273 @@
+Analyze my entire project thoroughly and automatically apply all required fixes and improvements. Do not stop at analysis. Implement the changes, test them, run the project, fix errors, and ensure the application is fully functional and ready for production deployment on Netlify.
+
+========================
+LOGIN IMPROVEMENTS
+
+Replace technical authentication errors with student-friendly messages.
+
+Examples:
+
+- auth/user-not-found → "Your account was not found. Please check your details."
+- auth/wrong-password → "Incorrect User ID or Password."
+- auth/invalid-credential → "Incorrect User ID or Password."
+- auth/network-error → "Internet connection problem. Please try again."
+- Any other technical authentication errors should be converted into simple, friendly language.
+
+Ensure no raw Firebase/Auth error messages are shown to users.
+
+========================
+PRINCIPAL DASHBOARD PDF EXPORT
+
+Add a "Download PDF Report" button in the Principal Dashboard.
+
+The PDF should include:
+
+- School Name
+- Total Students
+- Total Teachers
+- Total Tests
+- Results Summary
+- Date and Time
+- Student-wise performance data
+- Tab Switch Count for each student
+- Teacher Remarks
+- Overall Analytics
+
+PDF should be:
+
+- Professional
+- Mobile-friendly
+- Printable
+- Well formatted
+
+========================
+WHATSAPP TEST SHARING
+
+In Manage Tests section add a "Share on WhatsApp" button.
+
+When clicked, automatically generate a message like:
+
+📢 New Test Announcement
+
+Test: {Test Name}
+Subject: {Subject}
+Class: {Class}
+Date: {Date}
+Time: {Time}
+
+Please be prepared and join on time.
+
+Open WhatsApp with the message pre-filled so it can be sent directly to groups or contacts.
+
+========================
+REFRESH BUTTONS
+
+Add Refresh buttons to:
+
+- Student Dashboard
+- Teacher Dashboard
+- Principal Dashboard
+
+Requirements:
+
+- Visible at top-right corner
+- Refresh icon
+- Loading animation while refreshing
+- Fetch latest data instantly
+
+========================
+AUTO REFRESH SYSTEM
+
+Implement automatic data synchronization.
+
+Requirements:
+
+- New tests appear automatically
+- Updated tests appear automatically
+- Results update automatically
+- Dashboard statistics update automatically
+- No manual refresh required
+- Sync data frequently and efficiently
+
+========================
+LIVE TEST SYNCHRONIZATION
+
+Ensure real-time updates.
+
+Requirements:
+
+- When a teacher creates a test, students see it instantly.
+- When a teacher updates a test, students see updates instantly.
+- Live tests appear automatically.
+- Results and submissions sync automatically.
+- No browser refresh required.
+- Real-time behavior across all dashboards.
+
+========================
+TAB SWITCH TRACKING
+
+Track tab switching during tests.
+
+Requirements:
+
+- Count tab switches during test.
+- Save tab-switch data.
+- Display tab-switch count in:
+  - Student Results
+  - Teacher Dashboard
+  - Principal Dashboard
+  - PDF Reports
+
+Example:
+
+Student Name
+Score
+Percentage
+Time Taken
+Tab Switches
+
+Highlight suspiciously high tab-switch counts for teacher review.
+
+========================
+RESULT FEEDBACK SYSTEM
+
+Replace generic feedback like "Good" with personalized motivational feedback.
+
+90–100%
+🏆 Outstanding performance! Keep aiming higher and continue your excellent work.
+
+75–89%
+🌟 Great job! You are performing very well. A little more effort can take you to the top.
+
+60–74%
+📈 Nice progress! Keep practicing consistently and your scores will improve further.
+
+40–59%
+💪 You can do better. Focus on your weak areas and keep learning every day.
+
+Below 40%
+🚀 Don't give up. Every topper starts with improvement. Review your mistakes and try again with confidence.
+
+========================
+RESULT SHARING IMPROVEMENTS
+
+For individual result sharing include:
+
+- Student Name
+- Test Name
+- Subject
+- Score
+- Percentage
+- Rank
+- Time Taken
+- Tab Switch Count
+- Teacher Remarks
+- Motivational Feedback
+
+Generate a professional Result Card.
+
+========================
+RESULT PDF IMPROVEMENTS
+
+For each student result PDF include:
+
+- School Name
+- Student Name
+- Class
+- Test Name
+- Subject
+- Score
+- Percentage
+- Rank
+- Time Taken
+- Tab Switches
+- Teacher Remarks
+- Motivational Feedback
+- Generated Date
+
+Add visual performance indicators:
+
+🟢 Excellent Performance
+🟡 Average Performance
+🔴 Needs Improvement
+
+========================
+UI AND UX IMPROVEMENTS
+
+- Improve dashboard design
+- Improve responsiveness
+- Improve loading states
+- Improve notification design
+- Make notifications student-friendly
+- Remove confusing technical messages
+- Ensure mobile compatibility
+- Ensure smooth navigation
+
+========================
+NETLIFY DEPLOYMENT READINESS
+
+Perform a complete deployment audit.
+
+1. Analyze the entire codebase.
+2. Verify all dependencies.
+3. Fix broken imports and exports.
+4. Fix build warnings and errors.
+5. Ensure npm install works.
+6. Ensure npm run build succeeds.
+7. Ensure npm run dev succeeds.
+8. Generate/update netlify.toml if needed.
+9. Configure SPA redirects.
+10. Prevent:
+
+- 404 errors
+- Page Not Found issues
+- Route refresh failures
+
+11. Ensure all assets load correctly.
+12. Ensure images and fonts are included.
+13. Remove Replit-specific deployment issues.
+14. Verify deployment compatibility with Netlify.
+15. Verify every page works after deployment.
+
+========================
+FINAL EXECUTION REQUIREMENT
+
+Do NOT only analyze.
+
+Automatically:
+
+- Fix issues
+- Install required dependencies
+- Run the application
+- Start Preview
+- Test major features
+- Run production build
+- Verify deployment readiness
+- Continue troubleshooting until resolved
+
+Success criteria:
+
+✅ Preview starts successfully
+✅ No runtime errors
+✅ No build errors
+✅ No dependency issues
+✅ No 404 errors
+✅ No page refresh routing issues
+✅ WhatsApp sharing works
+✅ PDF export works
+✅ Live test updates work
+✅ Auto refresh works
+✅ Tab switch tracking works
+✅ Result sharing works
+✅ Student-friendly notifications work
+✅ Netlify deployment ready
+
+Finally provide a report containing:
+
+- Issues found
+- Fixes applied
+- Files modified
+- Preview status
+- Build status
+- Netlify readiness status
+- Remaining issues (if any)

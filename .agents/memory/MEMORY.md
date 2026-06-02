@@ -1,0 +1,1 @@
+- [PDF Generation Approach](pdf-approach.md) — uses window.open + styled HTML + window.print(), no external PDF library needed

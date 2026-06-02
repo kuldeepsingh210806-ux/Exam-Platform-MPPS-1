@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Eye, EyeOff, ClipboardList } from "lucide-react";
+import { Trash2, Eye, EyeOff, ClipboardList, MessageCircle } from "lucide-react";
+import { shareOnWhatsApp } from "@/lib/whatsapp";
 
 export default function ManageTests() {
   const { toast } = useToast();
@@ -25,6 +26,32 @@ export default function ManageTests() {
     await deleteTest(deleteId);
     setDeleteId(null);
     toast({ title: "Test deleted." });
+  };
+
+  const shareTestAnnouncement = (t: Test) => {
+    const scheduled = new Date(t.scheduledAt).toLocaleString("en-IN", {
+      day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+    const ends = new Date(t.endsAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    const msg = [
+      `📢 *Test Announcement*`,
+      ``,
+      `🏫 *MP Public School, Mathuranagar*`,
+      ``,
+      `📚 Test: *${t.title}*`,
+      `📖 Subject: ${t.subject}`,
+      `🎓 Class: ${t.targetClass}`,
+      `⏰ Scheduled: ${scheduled}`,
+      `🔚 Ends: ${ends}`,
+      `❓ Questions: ${t.questions.length}`,
+      `📊 Total Marks: ${t.totalMarks}`,
+      ``,
+      `Please be prepared and join on time.`,
+      ``,
+      `_MP Public School Online Exam System_`,
+    ].join("\n");
+    shareOnWhatsApp(msg);
+    toast({ title: "WhatsApp opened!", description: `Sharing announcement for ${t.title}` });
   };
 
   const sorted = [...tests].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime());
@@ -76,6 +103,9 @@ export default function ManageTests() {
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="icon" title={t.published ? "Unpublish" : "Publish"} onClick={()=>togglePublish(t)}>
                         {t.published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Share on WhatsApp" className="text-green-600 hover:text-green-700" onClick={()=>shareTestAnnouncement(t)}>
+                        <MessageCircle className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={()=>setDeleteId(t.id)}>
                         <Trash2 className="w-4 h-4" />
