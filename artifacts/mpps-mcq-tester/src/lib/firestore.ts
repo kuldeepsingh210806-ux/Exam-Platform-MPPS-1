@@ -1,13 +1,14 @@
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-  query, where, orderBy, onSnapshot, serverTimestamp, addDoc,
-  Timestamp, writeBatch, limit,
+  query, where, orderBy, onSnapshot,
+  writeBatch, limit,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
 export type StudentProfile = {
   uid: string;
   name: string;
+  admissionNumber?: string;
   class: string;
   section: string;
   rollNumber: string;
@@ -82,7 +83,39 @@ export type Violation = {
   type: string;
   count: number;
   autoSubmitted: boolean;
+  lastViolationAt?: string;
 };
+
+export type SharingHistory = {
+  id: string;
+  type: "individual" | "class";
+  studentId?: string;
+  studentName?: string;
+  className?: string;
+  testId: string;
+  testTitle: string;
+  sharedBy: string;
+  sharedAt: string;
+  message: string;
+};
+
+export const SUBJECTS = [
+  "Mathematics",
+  "Science",
+  "English",
+  "Hindi",
+  "SST",
+  "Business Studies",
+  "Accountancy",
+  "Economics",
+  "Computer Science",
+] as const;
+
+export const CLASSES = [
+  "3rd","4th","5th","6th","7th","8th","9th","10th",
+  "11th Bio","11th Commerce","11th Maths",
+  "12th Bio","12th Commerce","12th Maths",
+] as const;
 
 // ── Students ──────────────────────────────────────────────────────────────────
 export async function saveStudentProfile(uid: string, data: Omit<StudentProfile, "uid">) {
@@ -91,6 +124,9 @@ export async function saveStudentProfile(uid: string, data: Omit<StudentProfile,
 export async function getStudentProfile(uid: string): Promise<StudentProfile | null> {
   const snap = await getDoc(doc(db, "students", uid));
   return snap.exists() ? (snap.data() as StudentProfile) : null;
+}
+export async function updateStudentProfile(uid: string, data: Partial<Omit<StudentProfile, "uid">>) {
+  await updateDoc(doc(db, "students", uid), data as Record<string, unknown>);
 }
 export async function getAllStudents(): Promise<StudentProfile[]> {
   const snap = await getDocs(collection(db, "students"));
@@ -188,6 +224,15 @@ export async function getAttemptsByStudent(studentId: string): Promise<Attempt[]
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as Attempt);
 }
+export async function getAttemptsByTest(testId: string): Promise<Attempt[]> {
+  const q = query(
+    collection(db, "studentAttempts"),
+    where("testId", "==", testId),
+    where("submitted", "==", true)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as Attempt);
+}
 export async function getAllAttempts(): Promise<Attempt[]> {
   const snap = await getDocs(collection(db, "studentAttempts"));
   return snap.docs.map((d) => d.data() as Attempt);
@@ -203,14 +248,26 @@ export async function upsertViolation(studentId: string, testId: string, type: s
   const id = `${studentId}_${testId}`;
   const ref = doc(db, "violations", id);
   const snap = await getDoc(ref);
-  const current = snap.exists() ? (snap.data() as Violation) : { id, studentId, testId, type, count: 0, autoSubmitted: false };
+  const current = snap.exists()
+    ? (snap.data() as Violation)
+    : { id, studentId, testId, type, count: 0, autoSubmitted: false };
   const newCount = current.count + 1;
-  await setDoc(ref, { ...current, count: newCount, autoSubmitted: newCount >= 3 }, { merge: true });
+  await setDoc(ref, {
+    ...current,
+    count: newCount,
+    autoSubmitted: newCount >= 3,
+    lastViolationAt: new Date().toISOString(),
+  }, { merge: true });
   return newCount;
 }
 export async function getAllViolations(): Promise<Violation[]> {
   const snap = await getDocs(collection(db, "violations"));
   return snap.docs.map((d) => d.data() as Violation);
+}
+export function listenViolations(cb: (violations: Violation[]) => void) {
+  return onSnapshot(collection(db, "violations"), (snap) => {
+    cb(snap.docs.map((d) => d.data() as Violation));
+  });
 }
 
 // ── Notices ───────────────────────────────────────────────────────────────────
@@ -231,6 +288,16 @@ export function listenNotices(cb: (notices: Notice[]) => void) {
   return onSnapshot(q, (snap) => {
     cb(snap.docs.map((d) => d.data() as Notice));
   });
+}
+
+// ── Sharing History ────────────────────────────────────────────────────────────
+export async function saveSharingHistory(h: SharingHistory) {
+  await setDoc(doc(db, "sharingHistory", h.id), h);
+}
+export async function getSharingHistory(): Promise<SharingHistory[]> {
+  const q = query(collection(db, "sharingHistory"), orderBy("sharedAt", "desc"), limit(100));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as SharingHistory);
 }
 
 // ── ID helper ─────────────────────────────────────────────────────────────────
