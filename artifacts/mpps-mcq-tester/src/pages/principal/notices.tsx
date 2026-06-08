@@ -5,27 +5,83 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SearchableSelect } from "@/components/ui/searchable-select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Megaphone, PlusCircle, Trash2, Edit2 } from "lucide-react";
 
-const AUDIENCES = ["All", "Students", "Teachers"];
+const AUDIENCES: Notice["targetAudience"][] = ["All", "Students", "Teachers"];
+
+type NoticeForm = {
+  title: string;
+  content: string;
+  targetAudience: Notice["targetAudience"];
+};
+
+const EMPTY_FORM: NoticeForm = { title: "", content: "", targetAudience: "All" };
+
+function PrincipalNoticeFormFields({ form, onChange }: {
+  form: NoticeForm;
+  onChange: (patch: Partial<NoticeForm>) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label>Title</Label>
+          <Input
+            placeholder="Notice title..."
+            value={form.title}
+            onChange={e => onChange({ title: e.target.value })}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label>Target Audience</Label>
+          <div className="flex gap-2 flex-wrap pt-1">
+            {AUDIENCES.map(a => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => onChange({ targetAudience: a })}
+                className={`px-3 py-1.5 rounded text-sm font-medium border transition-colors ${
+                  form.targetAudience === a
+                    ? "bg-primary text-white border-primary"
+                    : "bg-background text-foreground border-border hover:bg-muted"
+                }`}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label>Content</Label>
+        <Textarea
+          rows={5}
+          placeholder="Write the announcement content..."
+          value={form.content}
+          onChange={e => onChange({ content: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function PrincipalNotices() {
   const { toast } = useToast();
-  const [notices, setNotices]   = useState<Notice[]>([]);
-  const [showing, setShowing]   = useState(false);
+  const [notices, setNotices]       = useState<Notice[]>([]);
+  const [showing, setShowing]       = useState(false);
   const [editNotice, setEditNotice] = useState<Notice | null>(null);
-  const [deleteId, setDeleteId] = useState<string|null>(null);
-  const [form, setForm] = useState({ title: "", content: "", targetAudience: "All" });
-  const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId]     = useState<string | null>(null);
+  const [form, setForm]             = useState<NoticeForm>(EMPTY_FORM);
+  const [saving, setSaving]         = useState(false);
 
   useEffect(() => { const u = listenNotices(setNotices); return u; }, []);
 
-  const resetForm = () => setForm({ title: "", content: "", targetAudience: "All" });
+  const updateForm = (patch: Partial<NoticeForm>) => setForm(f => ({ ...f, ...patch }));
+  const resetForm  = () => setForm(EMPTY_FORM);
 
   const handleCreate = async () => {
     if (!form.title.trim() || !form.content.trim()) {
@@ -34,12 +90,17 @@ export default function PrincipalNotices() {
     setSaving(true);
     try {
       const n: Notice = {
-        id: generateId(), title: form.title.trim(), content: form.content.trim(),
-        targetAudience: form.targetAudience as Notice["targetAudience"],
-        author: "Principal", authorRole: "principal", createdAt: new Date().toISOString(),
+        id: generateId(),
+        title: form.title.trim(),
+        content: form.content.trim(),
+        targetAudience: form.targetAudience,
+        author: "Principal",
+        authorRole: "principal",
+        createdAt: new Date().toISOString(),
       };
       await saveNotice(n);
-      resetForm(); setShowing(false);
+      resetForm();
+      setShowing(false);
       toast({ title: "Notice published!" });
     } finally { setSaving(false); }
   };
@@ -56,10 +117,12 @@ export default function PrincipalNotices() {
     setSaving(true);
     try {
       await updateNotice(editNotice.id, {
-        title: form.title.trim(), content: form.content.trim(),
-        targetAudience: form.targetAudience as Notice["targetAudience"],
+        title: form.title.trim(),
+        content: form.content.trim(),
+        targetAudience: form.targetAudience,
       });
-      setEditNotice(null); resetForm();
+      setEditNotice(null);
+      resetForm();
       toast({ title: "Notice updated." });
     } finally { setSaving(false); }
   };
@@ -70,25 +133,6 @@ export default function PrincipalNotices() {
     setDeleteId(null);
     toast({ title: "Notice deleted." });
   };
-
-  const FormFields = () => (
-    <div className="space-y-4">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <Label>Title</Label>
-          <Input placeholder="Notice title..." value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-        </div>
-        <div className="space-y-1">
-          <Label>Target Audience</Label>
-          <SearchableSelect value={form.targetAudience} onValueChange={v => setForm({ ...form, targetAudience: v })} options={AUDIENCES} placeholder="Select audience" />
-        </div>
-      </div>
-      <div className="space-y-1">
-        <Label>Content</Label>
-        <Textarea rows={5} placeholder="Write the announcement content..." value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} />
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -102,15 +146,16 @@ export default function PrincipalNotices() {
         </Button>
       </div>
 
-      {/* Create Form */}
       {showing && (
         <Card className="border-primary/30">
           <CardHeader><CardTitle>Create Notice</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <FormFields />
+            <PrincipalNoticeFormFields form={form} onChange={updateForm} />
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowing(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={saving}>{saving ? "Publishing..." : "Publish Notice"}</Button>
+              <Button onClick={handleCreate} disabled={saving}>
+                {saving ? "Publishing..." : "Publish Notice"}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -156,12 +201,12 @@ export default function PrincipalNotices() {
       )}
 
       {/* Edit Dialog */}
-      <Dialog open={!!editNotice} onOpenChange={o => !o && setEditNotice(null)}>
+      <Dialog open={!!editNotice} onOpenChange={o => { if (!o) { setEditNotice(null); resetForm(); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Edit Notice</DialogTitle></DialogHeader>
-          <FormFields />
+          <PrincipalNoticeFormFields form={form} onChange={updateForm} />
           <DialogFooter className="mt-2">
-            <Button variant="outline" onClick={() => setEditNotice(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setEditNotice(null); resetForm(); }}>Cancel</Button>
             <Button onClick={handleEdit} disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button>
           </DialogFooter>
         </DialogContent>
