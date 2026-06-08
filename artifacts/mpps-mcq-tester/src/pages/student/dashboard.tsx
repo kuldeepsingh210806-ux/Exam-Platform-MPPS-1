@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { listenTestsByClass, listenAttemptsByStudent, Test, Attempt } from "@/lib/firestore";
@@ -8,27 +8,33 @@ import { Activity, Calendar, CheckCircle2, Target, RefreshCw } from "lucide-reac
 
 export default function StudentDashboard() {
   const [, navigate] = useLocation();
-  const { studentProfile, user } = useAuth();
+  const { studentProfile, user, refreshProfile } = useAuth();
   const [tests, setTests] = useState<Test[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!studentProfile) return;
     const unsub = listenTestsByClass(studentProfile.class, setTests);
     return unsub;
-  }, [studentProfile]);
+  }, [studentProfile, refreshKey]);
 
   useEffect(() => {
     if (!user) return;
     const unsub = listenAttemptsByStudent(user.uid, setAttempts);
     return unsub;
-  }, [user]);
+  }, [user, refreshKey]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    try {
+      await refreshProfile();
+      setRefreshKey((k) => k + 1);
+    } finally {
+      setTimeout(() => setRefreshing(false), 600);
+    }
+  }, [refreshProfile]);
 
   const now = new Date();
   const live = tests.filter((t) => new Date(t.scheduledAt) <= now && new Date(t.endsAt) >= now);

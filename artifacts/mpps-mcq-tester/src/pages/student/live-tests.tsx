@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { listenTestsByClass, getAttemptByStudentAndTest, Test } from "@/lib/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, BookOpen, CheckCircle, AlertCircle } from "lucide-react";
+import { Clock, BookOpen, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 
 export default function LiveTests() {
   const [, navigate] = useLocation();
   const { studentProfile, user } = useAuth();
   const [tests, setTests] = useState<Test[]>([]);
   const [attemptedIds, setAttemptedIds] = useState<Set<string>>(new Set());
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!studentProfile) return;
@@ -20,7 +22,7 @@ export default function LiveTests() {
       setTests(all.filter((t) => new Date(t.scheduledAt) <= now && new Date(t.endsAt) >= now));
     });
     return unsub;
-  }, [studentProfile]);
+  }, [studentProfile, refreshKey]);
 
   useEffect(() => {
     if (!user || tests.length === 0) return;
@@ -30,6 +32,12 @@ export default function LiveTests() {
       setAttemptedIds(ids);
     });
   }, [user, tests]);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setRefreshKey((k) => k + 1);
+    setTimeout(() => setRefreshing(false), 600);
+  }, []);
 
   const formatTime = (mins: number) => `${mins} min${mins !== 1 ? "s" : ""}`;
   const timeLeft = (endsAt: string) => {
@@ -41,9 +49,15 @@ export default function LiveTests() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Live Tests</h2>
-        <p className="text-muted-foreground">Tests currently available for your class.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Live Tests</h2>
+          <p className="text-muted-foreground">Tests currently available for your class.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+          <RefreshCw className={`w-4 h-4 mr-1.5 ${refreshing ? "animate-spin" : ""}`} />
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </Button>
       </div>
       {tests.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -52,6 +66,9 @@ export default function LiveTests() {
           </div>
           <h3 className="text-xl font-semibold">No Live Tests Right Now</h3>
           <p className="text-muted-foreground mt-2">Check back later or view upcoming tests.</p>
+          <Button variant="outline" size="sm" className="mt-4" onClick={handleRefresh}>
+            <RefreshCw className="w-4 h-4 mr-1.5" /> Check Again
+          </Button>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">

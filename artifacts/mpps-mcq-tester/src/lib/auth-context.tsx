@@ -26,6 +26,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const ROLE_KEY = (uid: string) => `mpps_role_${uid}`;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
@@ -37,8 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const savedRole = sessionStorage.getItem(`mpps_role_${u.uid}`) as Role;
-        if (savedRole) {
+        // Use localStorage so role persists across tabs, browser restarts, and other devices
+        const savedRole = localStorage.getItem(ROLE_KEY(u.uid)) as Role;
+
+        if (savedRole && savedRole !== "principal") {
+          // Role was saved — restore it and load the matching profile
           setRole(savedRole);
           if (savedRole === "student") {
             const sp = await getStudentProfile(u.uid);
@@ -47,6 +52,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const tp = await getTeacherProfile(u.uid);
             setTeacherProfile(tp);
           }
+        } else if (savedRole === "principal") {
+          setRole("principal");
+        } else {
+          // No saved role — auto-detect from Firestore (handles cross-device logins)
+          const [sp, tp] = await Promise.all([
+            getStudentProfile(u.uid),
+            getTeacherProfile(u.uid),
+          ]);
+          if (sp) {
+            setRole("student");
+            setStudentProfile(sp);
+            localStorage.setItem(ROLE_KEY(u.uid), "student");
+          } else if (tp) {
+            setRole("teacher");
+            setTeacherProfile(tp);
+            localStorage.setItem(ROLE_KEY(u.uid), "teacher");
+          }
+          // Principal uses a fixed account — no Firestore profile needed
         }
       } else {
         setRole(null);
@@ -69,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    if (user) sessionStorage.removeItem(`mpps_role_${user.uid}`);
+    if (user) localStorage.removeItem(ROLE_KEY(user.uid));
     await firebaseSignOut(auth);
     setRole(null);
     setStudentProfile(null);
@@ -78,15 +101,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSetRole = (r: Role) => {
     setRole(r);
-    if (user && r) sessionStorage.setItem(`mpps_role_${user.uid}`, r);
+    if (user && r) localStorage.setItem(ROLE_KEY(user.uid), r);
   };
 
   const refreshProfile = async () => {
     if (!user) return;
-    if (role === "student") {
+    const currentRole = role;
+    if (currentRole === "student") {
       const sp = await getStudentProfile(user.uid);
       setStudentProfile(sp);
-    } else if (role === "teacher") {
+    } else if (currentRole === "teacher") {
       const tp = await getTeacherProfile(user.uid);
       setTeacherProfile(tp);
     }
