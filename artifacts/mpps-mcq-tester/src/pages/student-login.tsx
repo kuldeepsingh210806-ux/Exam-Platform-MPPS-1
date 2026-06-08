@@ -68,17 +68,21 @@ export default function StudentLogin() {
     }
     setLoading(true);
     try {
-      // Check for duplicate admission number
-      const existing = await getAllStudents();
-      const dupAdm = existing.find(s => s.admissionNumber?.trim() === admissionNumber.trim());
-      if (dupAdm) {
-        toast({ title: "Admission number already registered", description: "This admission number is already in use.", variant: "destructive" });
-        setLoading(false); return;
-      }
-      const dupRoll = existing.find(s => s.rollNumber === rollNumber && s.class === cls && s.section === section);
-      if (dupRoll) {
-        toast({ title: "Roll number already registered", description: `Roll ${rollNumber} in ${cls}-${section} is already taken.`, variant: "destructive" });
-        setLoading(false); return;
+      // Check for duplicate admission/roll number (best-effort — may be skipped if Firestore rules restrict unauthenticated reads)
+      try {
+        const existing = await getAllStudents();
+        const dupAdm = existing.find(s => s.admissionNumber?.trim() === admissionNumber.trim());
+        if (dupAdm) {
+          toast({ title: "Admission number already registered", description: "This admission number is already in use.", variant: "destructive" });
+          setLoading(false); return;
+        }
+        const dupRoll = existing.find(s => s.rollNumber === rollNumber && s.class === cls && s.section === section);
+        if (dupRoll) {
+          toast({ title: "Roll number already registered", description: `Roll ${rollNumber} in ${cls}-${section} is already taken.`, variant: "destructive" });
+          setLoading(false); return;
+        }
+      } catch {
+        // Firestore read failed (e.g. permission-denied for unauthenticated reads) — skip duplicate check and proceed
       }
       const user = await signUp(mobileToEmail(mobile), password);
       await saveStudentProfile(user.uid, {

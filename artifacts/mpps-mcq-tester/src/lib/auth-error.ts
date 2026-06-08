@@ -20,5 +20,11 @@ export function friendlyAuthError(err: any): string {
     return "Please log out and sign in again to continue.";
   if (code === "auth/invalid-email" || code === "auth/invalid-api-key")
     return "Invalid details. Please check and try again.";
-  return "Something went wrong. Please try again.";
+  if (code === "auth/operation-not-allowed")
+    return "Email/Password sign-in is not enabled. Please contact school administration.";
+  if (code === "permission-denied" || err?.message?.includes("permission-denied"))
+    return "Database permission denied. Please check Firestore security rules.";
+  // Surface the raw code in dev so it's diagnosable
+  const raw = code || err?.message || "unknown";
+  return `Something went wrong (${raw}). Please try again.`;
 }
