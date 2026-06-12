@@ -76,12 +76,20 @@ export default defineConfig(async () => {
       port,
       host: "0.0.0.0",
       allowedHosts: true,
+      headers: {
+        "X-Frame-Options": "ALLOWALL",
+        "Content-Security-Policy": "frame-ancestors *",
+      },
     },
 
     preview: {
       port,
       host: "0.0.0.0",
       allowedHosts: true,
+      headers: {
+        "X-Frame-Options": "ALLOWALL",
+        "Content-Security-Policy": "frame-ancestors *",
+      },
     },
   };
 });
