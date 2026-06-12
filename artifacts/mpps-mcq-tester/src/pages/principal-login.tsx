@@ -1,24 +1,25 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
+import { firebaseConfigValid } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Lock, Loader2 } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, AlertTriangle } from "lucide-react";
 import { friendlyAuthError } from "@/lib/auth-error";
 
-const PRINCIPAL_PASSKEY   = "MPPS05";
-const PRINCIPAL_EMAIL     = "principal@mpps-admin.edu";
-const PRINCIPAL_PASSWORD  = "MPPS05PrincipalAdmin2024";
+const PRINCIPAL_PASSKEY  = "MPPS05";
+const PRINCIPAL_EMAIL    = "principal@mpps-admin.edu";
+const PRINCIPAL_PASSWORD = "MPPS05PrincipalAdmin2024";
 
 export default function PrincipalLogin() {
   const [, navigate] = useLocation();
   const { signIn, signUp, setRole } = useAuth();
   const { toast } = useToast();
-  const [passkey, setPasskey]   = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [passkey, setPasskey] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const verify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,31 +27,39 @@ export default function PrincipalLogin() {
       toast({ title: "Invalid passkey", variant: "destructive" });
       return;
     }
+
     setLoading(true);
+    console.log("[MPPS] Principal login attempt...");
+
     try {
-      // Sign into Firebase Auth so Firestore permission rules pass
+      // Try to sign in with the fixed principal account
       try {
         await signIn(PRINCIPAL_EMAIL, PRINCIPAL_PASSWORD);
-      } catch (err: any) {
+        console.log("[MPPS] Principal signed in successfully.");
+      } catch (err: unknown) {
+        const code = (err as any)?.code ?? "";
         // Account doesn't exist yet — create it once
-        const code = err.code ?? "";
         if (
           code === "auth/user-not-found" ||
           code === "auth/invalid-credential" ||
           code === "auth/invalid-login-credentials"
         ) {
+          console.log("[MPPS] Principal account not found — creating...");
           await signUp(PRINCIPAL_EMAIL, PRINCIPAL_PASSWORD);
+          console.log("[MPPS] Principal account created.");
         } else {
           throw err;
         }
       }
+
       setRole("principal");
+      console.log("[MPPS] Principal role set — navigating to /principal");
       navigate("/principal");
-    } catch (err: any) {
-      console.error("Principal login error:", err);
+    } catch (err: unknown) {
+      console.error("[MPPS] Principal login error:", err);
       toast({
         title: "Login failed",
-        description: friendlyAuthError(err),
+        description: friendlyAuthError(err, "principal-login"),
         variant: "destructive",
       });
     } finally {
@@ -78,6 +87,13 @@ export default function PrincipalLogin() {
           </div>
         </div>
       </header>
+
+      {!firebaseConfigValid && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center gap-2 text-yellow-800 text-sm">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          Firebase is not configured. Login will not work until environment variables are set.
+        </div>
+      )}
 
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-sm shadow-lg">
