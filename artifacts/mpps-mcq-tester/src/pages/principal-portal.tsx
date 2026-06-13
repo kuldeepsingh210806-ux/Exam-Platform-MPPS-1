@@ -1,7 +1,7 @@
 import { Switch, Route } from "wouter";
 import {
   LayoutDashboard, BarChart2, GraduationCap, Megaphone, Users,
-  ShieldAlert, TrendingUp, PlusCircle, ClipboardList,
+  ShieldAlert, TrendingUp, PlusCircle, ClipboardList, FileText,
 } from "lucide-react";
 import { PortalLayout } from "@/components/portal-layout";
 import PrincipalDashboard from "./principal/dashboard";
@@ -11,6 +11,7 @@ import PrincipalNotices from "./principal/notices";
 import PrincipalManageStudents from "./principal/manage-students";
 import PrincipalIntegrityReport from "./principal/integrity";
 import SchoolAnalytics from "./principal/analytics";
+import PrincipalReports from "./principal/reports";
 import CreateTest from "./teacher/create-test";
 import ManageTests from "./teacher/manage-tests";
 
@@ -19,6 +20,7 @@ export default function PrincipalPortal() {
     { label: "Dashboard",        href: "",              icon: LayoutDashboard },
     { label: "All Results",      href: "/all-results",  icon: BarChart2       },
     { label: "Analytics",        href: "/analytics",    icon: TrendingUp      },
+    { label: "Reports & PDF",    href: "/reports",      icon: FileText        },
     { label: "Manage Students",  href: "/students",     icon: Users           },
     { label: "Manage Teachers",  href: "/teachers",     icon: GraduationCap   },
     { label: "Create Test",      href: "/create-test",  icon: PlusCircle      },
@@ -33,6 +35,7 @@ export default function PrincipalPortal() {
         <Route path="/principal"               component={PrincipalDashboard}       />
         <Route path="/principal/all-results"   component={AllResults}               />
         <Route path="/principal/analytics"     component={SchoolAnalytics}          />
+        <Route path="/principal/reports"       component={PrincipalReports}         />
         <Route path="/principal/students"      component={PrincipalManageStudents}  />
         <Route path="/principal/teachers"      component={ManageTeachers}           />
         <Route path="/principal/create-test"   component={CreateTest}               />
