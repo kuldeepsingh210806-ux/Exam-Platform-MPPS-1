@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,23 +18,25 @@ const queryClient = new QueryClient();
 
 function ProtectedStudent({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth();
-  const [, navigate] = [null, (p: string) => { window.location.href = p; }];
+  const [, navigate] = useLocation();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
-  if (!user || role !== "student") { window.location.replace("/student-login"); return null; }
+  if (!user || role !== "student") { navigate("/student-login"); return null; }
   return <>{children}</>;
 }
 
 function ProtectedTeacher({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth();
+  const [, navigate] = useLocation();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
-  if (!user || role !== "teacher") { window.location.replace("/teacher-login"); return null; }
+  if (!user || role !== "teacher") { navigate("/teacher-login"); return null; }
   return <>{children}</>;
 }
 
 function ProtectedPrincipal({ children }: { children: React.ReactNode }) {
-  const { role, loading } = useAuth();
+  const { user, role, loading } = useAuth();
+  const [, navigate] = useLocation();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
-  if (role !== "principal") { window.location.replace("/principal-login"); return null; }
+  if (!user || role !== "principal") { navigate("/principal-login"); return null; }
   return <>{children}</>;
 }
 

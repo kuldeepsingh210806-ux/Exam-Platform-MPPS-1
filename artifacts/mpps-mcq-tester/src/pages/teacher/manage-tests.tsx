@@ -53,7 +53,7 @@ export default function ManageTests() {
       `🎓 Class: ${t.targetClass}`,
       `⏰ Scheduled: ${scheduled}`,
       `🔚 Ends: ${ends}`,
-      `❓ Questions: ${t.questions.length}`,
+      `❓ Questions: ${t.questions?.length ?? 0}`,
       `📊 Total Marks: ${t.totalMarks}`,
       ``,
       `Please be prepared and join on time.`,
@@ -64,7 +64,8 @@ export default function ManageTests() {
     toast({ title: "WhatsApp opened!", description: `Sharing announcement for ${t.title}` });
   };
 
-  const sorted = [...tests].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime());
+  const validTests = tests.filter(t => t && t.id);
+  const sorted = [...validTests].sort((a,b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
 
   return (
     <div className="space-y-6">

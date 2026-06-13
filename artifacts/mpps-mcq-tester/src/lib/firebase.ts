@@ -28,7 +28,7 @@ if (missing.length > 0) {
   console.error(
     "[MPPS Firebase] ⚠️  Missing environment variables:",
     missing.join(", "),
-    "\nSet these in Netlify → Site configuration → Environment variables, then redeploy."
+    "\nSet these in your hosting environment's configuration (e.g. Replit Secrets), then redeploy."
   );
 }
 

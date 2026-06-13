@@ -46,7 +46,7 @@ function parseQuestions(raw: string): { questions: MCQQuestion[]; errors: string
 
 export default function CreateTest() {
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -87,7 +87,8 @@ export default function CreateTest() {
       };
       await saveTest(test);
       toast({ title: published ? "Test published!" : "Test saved as draft.", description: test.title });
-      navigate("/teacher");
+      const portalBase = role === "principal" ? "/principal" : "/teacher";
+      navigate(`${portalBase}/manage-tests`);
     } catch (e: any) {
       toast({ title: "Failed to save test.", description: e.message, variant: "destructive" });
     } finally { setLoading(false); }
