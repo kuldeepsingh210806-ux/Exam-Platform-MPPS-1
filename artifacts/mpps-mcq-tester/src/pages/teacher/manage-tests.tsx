@@ -102,7 +102,7 @@ export default function ManageTests() {
                   <TableCell>{t.subject}</TableCell>
                   <TableCell>{t.targetClass}</TableCell>
                   <TableCell className="text-sm">{new Date(t.scheduledAt).toLocaleDateString("en-IN")}</TableCell>
-                  <TableCell className="text-right">{t.questions.length}</TableCell>
+                  <TableCell className="text-right">{t.questions?.length ?? 0}</TableCell>
                   <TableCell className="text-right">{t.totalMarks}</TableCell>
                   <TableCell className="text-center">
                     <Badge variant={t.published ? "default" : "secondary"} className={t.published ? "bg-green-600" : ""}>
