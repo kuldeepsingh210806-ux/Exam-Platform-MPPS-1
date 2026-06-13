@@ -14,7 +14,17 @@ export default function ManageTests() {
   const [tests, setTests] = useState<Test[]>([]);
   const [deleteId, setDeleteId] = useState<string|null>(null);
 
-  useEffect(() => { const u = listenTests(setTests); return u; }, []);
+  useEffect(() => {
+    console.log("[MPPS] ManageTests: mounting, subscribing to listenTests");
+    const u = listenTests((incoming) => {
+      console.log(`[MPPS] ManageTests: received ${incoming.length} test(s) from listener`);
+      setTests(incoming);
+    });
+    return () => {
+      console.log("[MPPS] ManageTests: unmounting, unsubscribing from listenTests");
+      u();
+    };
+  }, []);
 
   const togglePublish = async (test: Test) => {
     await updateTest(test.id, { published: !test.published });

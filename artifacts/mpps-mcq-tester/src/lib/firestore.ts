@@ -175,24 +175,48 @@ export async function deleteTest(testId: string) {
   await deleteDoc(doc(db, "tests", testId));
 }
 export async function getAllTests(): Promise<Test[]> {
+  console.log("[MPPS] getAllTests: fetching all tests from Firestore");
   const snap = await getDocs(collection(db, "tests"));
-  return snap.docs.map((d) => d.data() as Test);
+  const tests = snap.docs.map((d) => d.data() as Test);
+  console.log(`[MPPS] getAllTests: received ${tests.length} test(s)`, tests.map(t => ({ id: t.id, title: t.title, published: t.published, scheduledAt: t.scheduledAt, endsAt: t.endsAt })));
+  return tests;
 }
 export function listenTests(cb: (tests: Test[]) => void) {
-  return onSnapshot(collection(db, "tests"), (snap) => {
-    cb(snap.docs.map((d) => d.data() as Test));
-  });
+  console.log("[MPPS] listenTests: subscribing to all tests (no filters)");
+  return onSnapshot(
+    collection(db, "tests"),
+    (snap) => {
+      const tests = snap.docs.map((d) => d.data() as Test);
+      console.log(`[MPPS] listenTests snapshot: ${tests.length} test(s) from Firestore (fromCache=${snap.metadata.fromCache})`, tests.map(t => ({ id: t.id, title: t.title, published: t.published })));
+      cb(tests);
+    },
+    (err) => {
+      console.error("[MPPS] listenTests ERROR:", err);
+    }
+  );
 }
 export async function getTestsByClass(cls: string): Promise<Test[]> {
+  console.log(`[MPPS] getTestsByClass: fetching published tests for class="${cls}"`);
   const q = query(collection(db, "tests"), where("targetClass", "==", cls), where("published", "==", true));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Test);
+  const tests = snap.docs.map((d) => d.data() as Test);
+  console.log(`[MPPS] getTestsByClass(${cls}): received ${tests.length} test(s)`, tests.map(t => ({ id: t.id, title: t.title, scheduledAt: t.scheduledAt, endsAt: t.endsAt })));
+  return tests;
 }
 export function listenTestsByClass(cls: string, cb: (tests: Test[]) => void) {
+  console.log(`[MPPS] listenTestsByClass: subscribing to published tests for class="${cls}"`);
   const q = query(collection(db, "tests"), where("targetClass", "==", cls), where("published", "==", true));
-  return onSnapshot(q, (snap) => {
-    cb(snap.docs.map((d) => d.data() as Test));
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      const tests = snap.docs.map((d) => d.data() as Test);
+      console.log(`[MPPS] listenTestsByClass(${cls}) snapshot: ${tests.length} test(s) (fromCache=${snap.metadata.fromCache})`, tests.map(t => ({ id: t.id, title: t.title, scheduledAt: t.scheduledAt, endsAt: t.endsAt })));
+      cb(tests);
+    },
+    (err) => {
+      console.error(`[MPPS] listenTestsByClass(${cls}) ERROR:`, err);
+    }
+  );
 }
 
 // ── Attempts ──────────────────────────────────────────────────────────────────
