@@ -23,7 +23,7 @@ export default function PrincipalLogin() {
 
   const verify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passkey.trim() !== PRINCIPAL_PASSKEY) {
+    if (passkey.trim().toUpperCase() !== PRINCIPAL_PASSKEY) {
       toast({ title: "Invalid passkey", variant: "destructive" });
       return;
     }
@@ -116,6 +116,10 @@ export default function PrincipalLogin() {
                   value={passkey}
                   onChange={(e) => setPasskey(e.target.value)}
                   disabled={loading}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>

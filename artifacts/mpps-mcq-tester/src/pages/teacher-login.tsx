@@ -45,7 +45,7 @@ export default function TeacherLogin() {
 
   const verifyPasskey = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passkey.trim() === TEACHER_PASSKEY) {
+    if (passkey.trim().toUpperCase() === TEACHER_PASSKEY) {
       setStep("auth");
     } else {
       toast({ title: "Invalid passkey", variant: "destructive" });
@@ -200,6 +200,10 @@ export default function TeacherLogin() {
                     placeholder="Enter passkey"
                     value={passkey}
                     onChange={(e) => setPasskey(e.target.value)}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
                   />
                 </div>
                 <Button type="submit" className="w-full">Verify Passkey</Button>
