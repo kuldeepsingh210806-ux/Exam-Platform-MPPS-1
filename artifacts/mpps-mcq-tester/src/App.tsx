@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,25 +18,22 @@ const queryClient = new QueryClient();
 
 function ProtectedStudent({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth();
-  const [, navigate] = useLocation();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
-  if (!user || role !== "student") { navigate("/student-login"); return null; }
+  if (!user || role !== "student") return <Redirect to="/student-login" />;
   return <>{children}</>;
 }
 
 function ProtectedTeacher({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth();
-  const [, navigate] = useLocation();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
-  if (!user || role !== "teacher") { navigate("/teacher-login"); return null; }
+  if (!user || role !== "teacher") return <Redirect to="/teacher-login" />;
   return <>{children}</>;
 }
 
 function ProtectedPrincipal({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth();
-  const [, navigate] = useLocation();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
-  if (!user || role !== "principal") { navigate("/principal-login"); return null; }
+  if (!user || role !== "principal") return <Redirect to="/principal-login" />;
   return <>{children}</>;
 }
 

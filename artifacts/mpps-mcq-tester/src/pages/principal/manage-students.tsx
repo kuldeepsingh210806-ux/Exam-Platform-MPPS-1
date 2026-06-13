@@ -47,10 +47,11 @@ export default function PrincipalManageStudents() {
   }, []);
 
   const filtered = students
+    .filter(s => s && s.uid)
     .filter(s => filterClass === "all" || s.class === filterClass)
     .filter(s =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.rollNumber.includes(search) || s.mobile.includes(search) ||
+      (s.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (s.rollNumber ?? "").includes(search) || (s.mobile ?? "").includes(search) ||
       (s.admissionNumber ?? "").includes(search)
     );
 

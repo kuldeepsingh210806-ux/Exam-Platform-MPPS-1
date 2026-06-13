@@ -136,11 +136,11 @@ export async function updateStudentProfile(uid: string, data: Partial<Omit<Stude
 }
 export async function getAllStudents(): Promise<StudentProfile[]> {
   const snap = await getDocs(collection(db, "students"));
-  return snap.docs.map((d) => d.data() as StudentProfile);
+  return snap.docs.map((d) => d.data() as StudentProfile).filter((s) => s && s.uid);
 }
 export function listenStudents(cb: (students: StudentProfile[]) => void) {
   return onSnapshot(collection(db, "students"), (snap) => {
-    cb(snap.docs.map((d) => d.data() as StudentProfile));
+    cb(snap.docs.map((d) => d.data() as StudentProfile).filter((s) => s && s.uid));
   });
 }
 export async function deleteStudentProfile(uid: string) {
@@ -177,7 +177,7 @@ export async function deleteTest(testId: string) {
 export async function getAllTests(): Promise<Test[]> {
   console.log("[MPPS] getAllTests: fetching all tests from Firestore");
   const snap = await getDocs(collection(db, "tests"));
-  const tests = snap.docs.map((d) => d.data() as Test);
+  const tests = snap.docs.map((d) => d.data() as Test).filter((t) => t && t.id);
   console.log(`[MPPS] getAllTests: received ${tests.length} test(s)`, tests.map(t => ({ id: t.id, title: t.title, published: t.published, scheduledAt: t.scheduledAt, endsAt: t.endsAt })));
   return tests;
 }
