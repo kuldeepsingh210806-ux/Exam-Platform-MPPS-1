@@ -43,7 +43,7 @@ export default function ReviewAnswers() {
         {[
           ["Score", `${attempt.score}/${attempt.totalMarks}`],
           ["Percentage", `${attempt.percentage?.toFixed(1)}%`],
-          ["Correct", `${correctCount}/${test.questions.length}`],
+          ["Correct", `${correctCount}/${test.questions?.length ?? 0}`],
           ["Time Taken", fmt(attempt.timeTaken ?? 0)],
         ].map(([label, value]) => (
           <Card key={label}><CardContent className="pt-4"><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl font-bold mt-1">{value}</p></CardContent></Card>

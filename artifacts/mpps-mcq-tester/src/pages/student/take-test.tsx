@@ -39,7 +39,7 @@ export default function TakeTest() {
       const allTests = await getAllTests();
       const t = allTests.find((x) => x.id === testId) ?? null;
       setTest(t);
-      if (!t) { setLoading(false); return; }
+      if (!t || !t.questions?.length) { setLoading(false); return; }
 
       let a = await getAttemptByStudentAndTest(user.uid, testId);
       if (!a) {
@@ -114,7 +114,7 @@ export default function TakeTest() {
 
     const timeTaken = Math.floor((Date.now() - startTime.current) / 1000);
     let score = 0;
-    test.questions.forEach((q) => {
+    (test.questions ?? []).forEach((q) => {
       if (answers[q.id] === q.correctAnswer) score += q.marks;
     });
     const pct = test.totalMarks > 0 ? (score / test.totalMarks) * 100 : 0;
@@ -142,7 +142,7 @@ export default function TakeTest() {
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading test...</div>;
-  if (!test) return <div className="flex items-center justify-center min-h-screen text-destructive">Test not found.</div>;
+  if (!test || !test.questions?.length) return <div className="flex items-center justify-center min-h-screen text-destructive">Test not found or has no questions.</div>;
   if (submitted) return (
     <div className="flex flex-col items-center justify-center min-h-screen text-center gap-4">
       <CheckCircle2 className="w-16 h-16 text-green-600" />
@@ -159,7 +159,7 @@ export default function TakeTest() {
       <div className="bg-primary text-primary-foreground px-6 py-3 flex items-center justify-between border-b-4 border-accent">
         <div>
           <h1 className="font-bold text-lg">{test.title}</h1>
-          <p className="text-xs text-primary-foreground/70">{studentProfile?.name} · {test.questions.length} questions</p>
+          <p className="text-xs text-primary-foreground/70">{studentProfile?.name} · {test.questions?.length ?? 0} questions</p>
         </div>
         <div className={`flex items-center gap-2 font-mono text-xl font-bold px-4 py-1.5 rounded-lg
           ${timeLeft < 120 ? "bg-red-600 animate-pulse" : "bg-white/20"}`}>
@@ -199,7 +199,7 @@ export default function TakeTest() {
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-medium text-muted-foreground">
-                Question {currentQ + 1} of {test.questions.length}
+                Question {currentQ + 1} of {test.questions?.length ?? 0}
               </span>
               <span className="text-sm font-medium">{q.marks} mark{q.marks !== 1 ? "s" : ""}</span>
             </div>
@@ -227,7 +227,7 @@ export default function TakeTest() {
               <Button variant="outline" onClick={() => setCurrentQ((p) => Math.max(0, p - 1))} disabled={currentQ === 0}>
                 ← Previous
               </Button>
-              {currentQ < test.questions.length - 1 ? (
+              {currentQ < (test.questions?.length ?? 1) - 1 ? (
                 <Button onClick={() => setCurrentQ((p) => p + 1)}>Next →</Button>
               ) : (
                 <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleSubmit(false)}>

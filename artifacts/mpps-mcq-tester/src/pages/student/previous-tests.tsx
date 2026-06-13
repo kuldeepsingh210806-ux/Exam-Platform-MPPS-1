@@ -108,7 +108,7 @@ export default function PreviousTests() {
                         <TimerOff className="w-3.5 h-3.5" />
                         <span>Ended: {new Date(test.endsAt).toLocaleDateString("en-IN")}</span>
                       </div>
-                      <div>{test.questions.length} questions · {test.totalMarks} marks</div>
+                      <div>{test.questions?.length ?? 0} questions · {test.totalMarks} marks</div>
                     </>
                   )}
                 </CardContent>

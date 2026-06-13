@@ -25,12 +25,12 @@ export function PortalLayout({
   children, title, links, basePath,
   noticeAudience, noticesPath,
 }: PortalLayoutProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { signOut, role, studentProfile, teacherProfile } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.replace("/");
+    navigate("/");
   };
 
   const displayName =

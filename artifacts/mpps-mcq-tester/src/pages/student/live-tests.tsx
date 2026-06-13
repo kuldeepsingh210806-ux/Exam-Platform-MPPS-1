@@ -102,7 +102,7 @@ export default function LiveTests() {
                         <Clock className="w-3.5 h-3.5" />
                         <span>{formatTime(test.duration)} · {timeLeft(test.endsAt)}</span>
                       </div>
-                      <div className="text-muted-foreground">{test.questions.length} questions · {test.totalMarks} marks</div>
+                      <div className="text-muted-foreground">{test.questions?.length ?? 0} questions · {test.totalMarks} marks</div>
                     </CardContent>
                     <CardFooter>
                       {done ? (
@@ -159,7 +159,7 @@ export default function LiveTests() {
                             <Clock className="w-3.5 h-3.5" />
                             <span>Ended {new Date(test.endsAt).toLocaleString("en-IN")}</span>
                           </div>
-                          <div>{test.questions.length} questions · {test.totalMarks} marks</div>
+                          <div>{test.questions?.length ?? 0} questions · {test.totalMarks} marks</div>
                         </CardContent>
                         {done && (
                           <CardFooter>

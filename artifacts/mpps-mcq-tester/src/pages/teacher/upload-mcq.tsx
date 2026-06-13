@@ -121,7 +121,7 @@ export default function UploadMCQ() {
         <SearchableSelect
           value={selectedTestId}
           onValueChange={setSelectedTestId}
-          options={tests.map(t => ({ value: t.id, label: `${t.title} — ${t.targetClass} (${t.questions.length} Qs)` }))}
+          options={tests.map(t => ({ value: t.id, label: `${t.title} — ${t.targetClass} (${t.questions?.length ?? 0} Qs)` }))}
           placeholder="Choose a test..."
         />
         {tests.length === 0 && (

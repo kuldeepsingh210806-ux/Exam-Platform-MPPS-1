@@ -1,0 +1,47 @@
+Perform a complete end-to-end audit of the entire application (frontend, backend, Firebase, Firestore, Authentication, Cloud Functions, App Check, deployment, and database structure) and identify every bug, security issue, logic error, configuration problem, and data integrity issue.
+
+Current known problems:
+
+- Student registrations disappeared after test documents were deleted.
+- Tests sometimes disappear after some time.
+- Principal login shows "Firebase project not found" and "configuration-not-found".
+- Browser console shows "App Check: App not registered".
+- Manage Tests page becomes blank.
+- Creating a test redirects to the home page.
+- Principal/admin session logs out unexpectedly.
+- Passkey sometimes shows invalid until the app is refreshed.
+- FirebaseFunctionsException.Code.DATA_LOSS is being stored as user data.
+- Some users cannot register.
+- Firestore collections appear inconsistent.
+- Netlify deployment may not be loading Firebase configuration correctly.
+
+Tasks:
+
+1. Analyze the complete codebase and architecture.
+2. Trace every Firestore read, write, update, and delete operation.
+3. Verify all Firebase environment variables and initialization logic.
+4. Verify Authentication, Firestore, Cloud Functions, Storage, and App Check configuration.
+5. Find all broken queries, missing indexes, invalid document paths, and permission issues.
+6. Check whether deleting tests can accidentally delete students, attempts, users, or related records.
+7. Verify that student data, teacher data, tests, attempts, and admin settings are stored in the correct collections.
+8. Fix all blank pages, crashes, null references, unhandled promises, and runtime errors.
+9. Ensure all pages work after refresh and direct navigation.
+10. Ensure admin authentication persists correctly across sessions.
+11. Ensure test creation, editing, deletion, and viewing work correctly.
+12. Ensure student registration and login work reliably for all devices.
+13. Ensure Firestore data is never lost because of frontend state issues.
+14. Add proper error handling, logging, validation, loading states, and recovery mechanisms.
+15. Verify Netlify production deployment and environment variables.
+16. Detect any data corruption and prevent Firebase error messages from being saved as actual user data.
+17. Generate missing configuration documents automatically if required.
+18. Review security rules and recommend safe production-ready rules.
+19. Produce a detailed report listing:
+    - Every issue found
+    - Root cause
+    - Files affected
+    - Exact code changes made
+    - Database changes required
+    - Deployment changes required
+20. Fix all identified issues and ensure the application is stable, production-ready, and fully functional without breaking existing data.
+
+Do not stop after fixing one issue. Perform a full project-wide audit and resolve all frontend, backend, Firebase, Firestore, authentication, deployment, and data consistency problems before completing the task.

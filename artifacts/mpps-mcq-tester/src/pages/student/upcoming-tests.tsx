@@ -69,7 +69,7 @@ export default function UpcomingTests() {
                 </div>
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>{t.questions.length} questions</span>
+                  <span>{t.questions?.length ?? 0} questions</span>
                 </div>
               </CardContent>
             </Card>
